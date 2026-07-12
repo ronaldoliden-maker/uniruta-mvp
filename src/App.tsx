@@ -110,6 +110,14 @@ function App() {
     () => localStorage.getItem('uniruta-nota-ea3') ?? '',
   )
 
+  const [notaTA1, setNotaTA1] = useState(
+    () => localStorage.getItem('uniruta-nota-ta1') ?? '',
+  )
+  
+  const [notaTA2, setNotaTA2] = useState(
+    () => localStorage.getItem('uniruta-nota-ta2') ?? '',
+  )
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -136,6 +144,11 @@ function App() {
     localStorage.setItem('uniruta-nota-ea2', notaEA2)
     localStorage.setItem('uniruta-nota-ea3', notaEA3)
   }, [notaEA1, notaEA2, notaEA3])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-ta1', notaTA1)
+    localStorage.setItem('uniruta-nota-ta2', notaTA2)
+  }, [notaTA1, notaTA2])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -326,13 +339,16 @@ function App() {
     }
   }
 
-  const estanCompletasEA123 =
-    notaEA1 !== '' && notaEA2 !== '' && notaEA3 !== ''
+  const pea123 =
+  (Number(notaEA1 || 0) +
+    Number(notaEA2 || 0) +
+    Number(notaEA3 || 0)) /
+  3
 
-  const pea123 = estanCompletasEA123
-    ? (Number(notaEA1) + Number(notaEA2) + Number(notaEA3)) / 3
-    : null
 
+  const pta12 =
+  (Number(notaTA1 || 0) + Number(notaTA2 || 0)) / 2
+    
   return (
     <main className="app">
       <header className="topbar">
@@ -840,14 +856,56 @@ function App() {
                     </div>
 
                     <div className="calculated-grade">
-                      <span>Promedio PEA123</span>
+                    <span>Promedio provisional PEA123</span>
 
-                      <strong>
-                        {pea123 !== null
-                          ? pea123.toFixed(2)
-                          : 'Pendiente'}
-                      </strong>
+                      <strong>{pea123.toFixed(2)}</strong>
                     </div>
+
+                    <div className="grade-input-section">
+  <h4>Tareas</h4>
+
+  <div className="grade-input-grid">
+    <label className="grade-input-field">
+      <span>TA1</span>
+
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaTA1}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaTA1)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+
+    <label className="grade-input-field">
+      <span>TA2</span>
+
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaTA2}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaTA2)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+  </div>
+
+  <div className="calculated-grade">
+  <span>Promedio provisional PTA12</span>
+
+    <strong>{pta12.toFixed(2)}</strong>
+  </div>
+</div>
+
+
                   </div>
                 </article>
 
