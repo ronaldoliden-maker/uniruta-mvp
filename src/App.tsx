@@ -98,9 +98,17 @@ function App() {
     null,
   )
 
-  const [notaEA1, setNotaEA1] = useState('')
-  const [notaEA2, setNotaEA2] = useState('')
-  const [notaEA3, setNotaEA3] = useState('')
+  const [notaEA1, setNotaEA1] = useState(
+    () => localStorage.getItem('uniruta-nota-ea1') ?? '',
+  )
+  
+  const [notaEA2, setNotaEA2] = useState(
+    () => localStorage.getItem('uniruta-nota-ea2') ?? '',
+  )
+  
+  const [notaEA3, setNotaEA3] = useState(
+    () => localStorage.getItem('uniruta-nota-ea3') ?? '',
+  )
 
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
@@ -122,6 +130,12 @@ function App() {
       JSON.stringify(actividades),
     )
   }, [actividades])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-ea1', notaEA1)
+    localStorage.setItem('uniruta-nota-ea2', notaEA2)
+    localStorage.setItem('uniruta-nota-ea3', notaEA3)
+  }, [notaEA1, notaEA2, notaEA3])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -889,6 +903,6 @@ function App() {
       )}
     </main>
   )
-}
+} 
 
 export default App
