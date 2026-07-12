@@ -10,7 +10,9 @@ function App() {
   const [tipoActividad, setTipoActividad] = useState('Tarea')
   const [semanaActividad, setSemanaActividad] = useState('')
   const [fechaActividad, setFechaActividad] = useState('')
-
+  const [actividadEditandoId, setActividadEditandoId] = useState<number | null>(
+    null,
+  )
 
 
   const [actividades, setActividades] = useState(() => {
@@ -182,15 +184,68 @@ useEffect(() => {
     return `${dia}/${mes}/${anio}`
   }
 
+  function convertirFechaParaInput(fechaGuardada: string) {
+    const coincidencia = fechaGuardada.match(
+      /(\d{2})\/(\d{2})\/(\d{4})/,
+    )
+  
+    if (!coincidencia) {
+      return ''
+    }
+  
+    const [, dia, mes, anio] = coincidencia
+  
+    return `${anio}-${mes}-${dia}`
+  }
+  
+  function limpiarFormulario() {
+    setNombreActividad('')
+    setTipoActividad('Tarea')
+    setSemanaActividad('')
+    setFechaActividad('')
+    setActividadEditandoId(null)
+    setMostrarFormulario(false)
+  }
+  
+  function abrirFormularioNuevo() {
+    setNombreActividad('')
+    setTipoActividad('Tarea')
+    setSemanaActividad('')
+    setFechaActividad('')
+    setActividadEditandoId(null)
+    setMostrarFormulario(true)
+  }
+  
+  function abrirFormularioEdicion(id: number) {
+    const actividadSeleccionada = actividades.find(
+      (actividad) => actividad.id === id,
+    )
+  
+    if (!actividadSeleccionada) {
+      return
+    }
+  
+    setNombreActividad(actividadSeleccionada.nombre)
+    setTipoActividad(actividadSeleccionada.tipo)
+    setSemanaActividad(
+      String(obtenerNumeroSemana(actividadSeleccionada.semana)),
+    )
+    setFechaActividad(
+      convertirFechaParaInput(actividadSeleccionada.fecha),
+    )
+    setActividadEditandoId(id)
+    setMostrarFormulario(true)
+  }
+
+
   function agregarActividad(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-
+  
     if (!nombreActividad.trim() || !semanaActividad) {
       return
     }
-
-    const nuevaActividad = {
-      id: Date.now(),
+  
+    const datosActividad = {
       nombre: nombreActividad.trim(),
       tipo: tipoActividad,
       semana: `Semana ${semanaActividad}`,
@@ -199,14 +254,29 @@ useEffect(() => {
         : 'Fecha exacta pendiente',
       estado: 'No iniciada',
     }
-
-    setActividades([...actividades, nuevaActividad])
-
-    setNombreActividad('')
-    setTipoActividad('Tarea')
-    setSemanaActividad('')
-    setFechaActividad('')
-    setMostrarFormulario(false)
+  
+    if (actividadEditandoId !== null) {
+      setActividades(
+        actividades.map((actividad) =>
+          actividad.id === actividadEditandoId
+            ? {
+                ...actividad,
+                ...datosActividad,
+                estado: actividad.estado,
+              }
+            : actividad,
+        ),
+      )
+    } else {
+      const nuevaActividad = {
+        id: Date.now(),
+        ...datosActividad,
+      }
+  
+      setActividades([...actividades, nuevaActividad])
+    }
+  
+    limpiarFormulario()
   }
 
   return (
@@ -414,7 +484,11 @@ useEffect(() => {
                 <div>
                 {mostrarFormulario && (
                 <form className="activity-form" onSubmit={agregarActividad}>
-                  <h3>Nueva actividad</h3>
+                  <h3>
+  {actividadEditandoId !== null
+    ? 'Editar actividad'
+    : 'Nueva actividad'}
+</h3>
 
                   <div className="form-grid">
                     <label className="form-field">
@@ -479,12 +553,16 @@ useEffect(() => {
                     <button
                       type="button"
                       className="cancel-button"
-                      onClick={() => setMostrarFormulario(false)}
+                      onClick={limpiarFormulario}
                     >
                       Cancelar
                     </button>
 
-                    <button type="submit">Guardar actividad</button>
+                    <button type="submit">
+  {actividadEditandoId !== null
+    ? 'Guardar cambios'
+    : 'Guardar actividad'}
+</button>
                   </div>
                 </form>
               )}
@@ -492,7 +570,7 @@ useEffect(() => {
                   <h2>Actividades</h2>
                 </div>
 
-                <button type="button" onClick={() => setMostrarFormulario(true)}>
+                <button type="button" onClick={abrirFormularioNuevo}>
   + Agregar actividad
 </button>
               </div>
@@ -528,6 +606,14 @@ useEffect(() => {
   >
     {actividad.estado === 'Completada' ? 'Reabrir' : 'Completar'}
   </button>
+
+  <button
+  type="button"
+  className="edit-activity-button"
+  onClick={() => abrirFormularioEdicion(actividad.id)}
+>
+  Editar
+</button>
 
   <button
     type="button"
