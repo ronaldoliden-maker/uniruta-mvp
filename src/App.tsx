@@ -1,21 +1,19 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import './App.css'
 
 function App() {
   const [vista, setVista] = useState('inicio')
   const [pestanaCurso, setPestanaCurso] = useState('resumen')
 
-  const cursos = [
-    {
-      id: 1,
-      nombre: 'Ecuaciones Diferenciales',
-      promedio: 'Sin notas',
-      pendientes: 9,
-      proximaActividad: 'EA1',
-    },
-  ]
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [nombreActividad, setNombreActividad] = useState('')
+  const [tipoActividad, setTipoActividad] = useState('Tarea')
+  const [semanaActividad, setSemanaActividad] = useState('')
+  const [fechaActividad, setFechaActividad] = useState('')
 
-  const actividades = [
+
+
+  const [actividades, setActividades] = useState([
     {
       id: 1,
       nombre: 'EA1',
@@ -88,7 +86,65 @@ function App() {
       fecha: 'Fecha exacta pendiente',
       estado: 'No iniciada',
     },
+  ])
+
+  const pendientes = actividades.filter(
+    (actividad) => actividad.estado !== 'Completada',
+  ).length
+
+  function obtenerNumeroSemana(textoSemana: string) {
+    const coincidencia = textoSemana.match(/\d+/)
+
+    return coincidencia ? Number(coincidencia[0]) : 999
+  }
+
+  const actividadesOrdenadas = [...actividades].sort(
+    (actividadA, actividadB) =>
+      obtenerNumeroSemana(actividadA.semana) -
+      obtenerNumeroSemana(actividadB.semana),
+  )
+
+  const cursos = [
+    {
+      id: 1,
+      nombre: 'Ecuaciones Diferenciales',
+      promedio: 'Sin notas',
+      pendientes,
+      proximaActividad: 'EA1',
+    },
   ]
+
+  function formatearFecha(fecha: string) {
+    const [anio, mes, dia] = fecha.split('-')
+    return `${dia}/${mes}/${anio}`
+  }
+
+  function agregarActividad(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!nombreActividad.trim() || !semanaActividad) {
+      return
+    }
+
+    const nuevaActividad = {
+      id: Date.now(),
+      nombre: nombreActividad.trim(),
+      tipo: tipoActividad,
+      semana: `Semana ${semanaActividad}`,
+      fecha: fechaActividad
+        ? `Fecha: ${formatearFecha(fechaActividad)}`
+        : 'Fecha exacta pendiente',
+      estado: 'No iniciada',
+    }
+
+    setActividades([...actividades, nuevaActividad])
+
+    setNombreActividad('')
+    setTipoActividad('Tarea')
+    setSemanaActividad('')
+    setFechaActividad('')
+    setMostrarFormulario(false)
+  }
 
   return (
     <main className="app">
@@ -130,7 +186,7 @@ function App() {
 
           <div className="summary-grid">
             <article className="summary-card">
-              <strong>9</strong>
+            <strong>{pendientes}</strong>
               <span>Pendientes</span>
             </article>
 
@@ -238,7 +294,7 @@ function App() {
                 </article>
 
                 <article className="summary-card">
-                  <strong>9</strong>
+                <strong>{pendientes}</strong>
                   <span>Pendientes</span>
                 </article>
               </div>
@@ -279,15 +335,93 @@ function App() {
             <section className="activities-panel">
               <div className="activities-header">
                 <div>
+                {mostrarFormulario && (
+                <form className="activity-form" onSubmit={agregarActividad}>
+                  <h3>Nueva actividad</h3>
+
+                  <div className="form-grid">
+                    <label className="form-field">
+                      <span>Nombre</span>
+                      <input
+                        type="text"
+                        value={nombreActividad}
+                        onChange={(event) =>
+                          setNombreActividad(event.target.value)
+                        }
+                        placeholder="Ejemplo: Quiz 1"
+                        required
+                      />
+                    </label>
+
+                    <label className="form-field">
+                      <span>Tipo</span>
+                      <select
+                        value={tipoActividad}
+                        onChange={(event) =>
+                          setTipoActividad(event.target.value)
+                        }
+                      >
+                        <option>Evaluación en aula</option>
+                        <option>Tarea</option>
+                        <option>Resolución de casos</option>
+                        <option>Proyecto</option>
+                        <option>Examen</option>
+                        <option>Reunión</option>
+                        <option>Sesión de estudio</option>
+                      </select>
+                    </label>
+
+                    <label className="form-field">
+                      <span>Semana</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="16"
+                        value={semanaActividad}
+                        onChange={(event) =>
+                          setSemanaActividad(event.target.value)
+                        }
+                        placeholder="1"
+                        required
+                      />
+                    </label>
+
+                    <label className="form-field">
+                      <span>Fecha exacta opcional</span>
+                      <input
+                        type="date"
+                        value={fechaActividad}
+                        onChange={(event) =>
+                          setFechaActividad(event.target.value)
+                        }
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      onClick={() => setMostrarFormulario(false)}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button type="submit">Guardar actividad</button>
+                  </div>
+                </form>
+              )}
                   <p>Organización del curso</p>
                   <h2>Actividades</h2>
                 </div>
 
-                <button type="button">+ Agregar actividad</button>
+                <button type="button" onClick={() => setMostrarFormulario(true)}>
+  + Agregar actividad
+</button>
               </div>
 
               <div className="activities-list">
-                {actividades.map((actividad) => (
+              {actividadesOrdenadas.map((actividad) => (
                   <article className="activity-card" key={actividad.id}>
                     <div>
                       <h3>{actividad.nombre}</h3>
