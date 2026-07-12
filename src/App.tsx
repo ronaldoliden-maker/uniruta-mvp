@@ -168,6 +168,14 @@ function App() {
     () => localStorage.getItem('uniruta-nota-p3') ?? '',
   )
 
+  const [notaEP, setNotaEP] = useState(
+    () => localStorage.getItem('uniruta-nota-ep') ?? '',
+  )
+  
+  const [notaEF, setNotaEF] = useState(
+    () => localStorage.getItem('uniruta-nota-ef') ?? '',
+  )
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -222,11 +230,16 @@ function App() {
     localStorage.setItem('uniruta-nota-rc4', notaRC4)
   }, [notaRC3, notaRC4])
 
-
   useEffect(() => {
     localStorage.setItem('uniruta-nota-p2', notaP2)
     localStorage.setItem('uniruta-nota-p3', notaP3)
   }, [notaP2, notaP3])
+
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-ep', notaEP)
+    localStorage.setItem('uniruta-nota-ef', notaEF)
+  }, [notaEP, notaEF])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -483,6 +496,20 @@ const ec1SinRedondear =
   
   const ec2 = Math.round(ec2SinRedondear)
 
+
+  const ep = Number(notaEP || 0)
+const ef = Number(notaEF || 0)
+
+const notaFinalSinRedondear =
+  ep * 0.2 +
+  ef * 0.3 +
+  ec1 * 0.25 +
+  ec2 * 0.25
+
+const notaFinalRedondeada = Math.round(notaFinalSinRedondear)
+
+const estadoFinal =
+  notaFinalSinRedondear >= 10.5 ? 'Aprobado' : 'Por debajo de 10.5'
 
   return (
     <main className="app">
@@ -866,33 +893,53 @@ const ec1SinRedondear =
               </div>
 
               <div className="final-grade-grid">
-                <article className="final-grade-card">
-                  <span>Promedio actual</span>
-                  <strong>—</strong>
-                </article>
+              <article className="final-grade-card">
+                <span>Nota final provisional</span>
+                <strong>{notaFinalSinRedondear.toFixed(2)}</strong>
+              </article>
 
-                <article className="final-grade-card">
-                  <span>Porcentaje evaluado</span>
-                  <strong>0 %</strong>
-                </article>
+              <article className="final-grade-card">
+                <span>Nota final redondeada</span>
+                <strong>{notaFinalRedondeada}</strong>
+              </article>
 
-                <article className="final-grade-card">
-                  <span>Nota mínima</span>
-                  <strong>10.5</strong>
-                </article>
+              <article className="final-grade-card">
+                <span>Estado provisional</span>
+                <strong className="grade-status">{estadoFinal}</strong>
+              </article>
               </div>
 
               <section className="grade-tree">
-                <article className="grade-group">
-                  <div className="grade-group-title">
-                    <div>
-                      <h3>Examen parcial</h3>
-                      <p>Nota directa sobre 20</p>
-                    </div>
+              <article className="grade-group">
+  <div className="grade-group-title">
+    <div>
+      <h3>Examen parcial</h3>
+      <p>Nota directa sobre 20</p>
+    </div>
 
-                    <strong>20 %</strong>
-                  </div>
-                </article>
+    <strong>20 %</strong>
+  </div>
+
+  <div className="grade-input-section">
+    <div className="grade-input-grid">
+      <label className="grade-input-field">
+        <span>EP</span>
+
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          value={notaEP}
+          onChange={(event) =>
+            actualizarNota(event.target.value, setNotaEP)
+          }
+          placeholder="0 a 20"
+        />
+      </label>
+    </div>
+  </div>
+</article>
 
                 <article className="grade-group">
                   <div className="grade-group-title">
@@ -1356,16 +1403,36 @@ const ec1SinRedondear =
   </div>
 </div>
 
-                <article className="grade-group">
-                  <div className="grade-group-title">
-                    <div>
-                      <h3>Examen final</h3>
-                      <p>Nota directa sobre 20</p>
-                    </div>
+<article className="grade-group">
+  <div className="grade-group-title">
+    <div>
+      <h3>Examen final</h3>
+      <p>Nota directa sobre 20</p>
+    </div>
 
-                    <strong>30 %</strong>
-                  </div>
-                </article>
+    <strong>30 %</strong>
+  </div>
+
+  <div className="grade-input-section">
+    <div className="grade-input-grid">
+      <label className="grade-input-field">
+        <span>EF</span>
+
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          value={notaEF}
+          onChange={(event) =>
+            actualizarNota(event.target.value, setNotaEF)
+          }
+          placeholder="0 a 20"
+        />
+      </label>
+    </div>
+  </div>
+</article>
               </section>
             </section>
           )}
