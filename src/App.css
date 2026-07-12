@@ -548,3 +548,41 @@
     width: 100%;
   }
 }
+
+.activity-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.completed-status {
+  color: #166534;
+  background-color: #dcfce7;
+}
+
+.activity-status-button {
+  padding: 8px 12px;
+  color: #1557b0;
+  background-color: #eaf2ff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activity-status-button:hover {
+  background-color: #dbe9ff;
+}
+
+@media (max-width: 600px) {
+  .activity-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .activity-status-button {
+    width: 100%;
+  }
+}

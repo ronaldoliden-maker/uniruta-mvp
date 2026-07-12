@@ -92,6 +92,10 @@ function App() {
     (actividad) => actividad.estado !== 'Completada',
   ).length
 
+  const completadas = actividades.filter(
+    (actividad) => actividad.estado === 'Completada',
+  ).length
+
   function obtenerNumeroSemana(textoSemana: string) {
     const coincidencia = textoSemana.match(/\d+/)
 
@@ -104,15 +108,37 @@ function App() {
       obtenerNumeroSemana(actividadB.semana),
   )
 
+  const proximaActividad = actividadesOrdenadas.find(
+    (actividad) => actividad.estado !== 'Completada',
+  )
+
   const cursos = [
     {
       id: 1,
       nombre: 'Ecuaciones Diferenciales',
       promedio: 'Sin notas',
       pendientes,
-      proximaActividad: 'EA1',
+      proximaActividad: proximaActividad
+  ? proximaActividad.nombre
+  : 'Sin actividades pendientes',
     },
   ]
+
+  function alternarEstadoActividad(id: number) {
+    setActividades(
+      actividades.map((actividad) =>
+        actividad.id === id
+          ? {
+              ...actividad,
+              estado:
+                actividad.estado === 'Completada'
+                  ? 'No iniciada'
+                  : 'Completada',
+            }
+          : actividad,
+      ),
+    )
+  }
 
   function formatearFecha(fecha: string) {
     const [anio, mes, dia] = fecha.split('-')
@@ -196,7 +222,7 @@ function App() {
             </article>
 
             <article className="summary-card">
-              <strong>0</strong>
+              <strong>{completadas}</strong>
               <span>Completadas</span>
             </article>
           </div>
@@ -299,11 +325,25 @@ function App() {
                 </article>
               </div>
 
-              <article className="next-activity">
-                <p>Próxima actividad</p>
-                <h2>EA1 — Evaluación en aula</h2>
-                <span>Semana 2 · Fecha exacta pendiente</span>
-              </article>
+              {proximaActividad ? (
+  <article className="next-activity">
+    <p>Próxima actividad</p>
+
+    <h2>
+      {proximaActividad.nombre} — {proximaActividad.tipo}
+    </h2>
+
+    <span>
+      {proximaActividad.semana} · {proximaActividad.fecha}
+    </span>
+  </article>
+) : (
+  <article className="next-activity">
+    <p>Próxima actividad</p>
+    <h2>No tienes actividades pendientes</h2>
+    <span>Has completado todas las actividades registradas.</span>
+  </article>
+)}
 
               <section className="grade-components">
                 <h2>Componentes de la nota</h2>
@@ -433,7 +473,23 @@ function App() {
                       </div>
                     </div>
 
-                    <span className="status-badge">{actividad.estado}</span>
+                    <div className="activity-actions">
+  <span
+    className={`status-badge ${
+      actividad.estado === 'Completada' ? 'completed-status' : ''
+    }`}
+  >
+    {actividad.estado}
+  </span>
+
+  <button
+    type="button"
+    className="activity-status-button"
+    onClick={() => alternarEstadoActividad(actividad.id)}
+  >
+    {actividad.estado === 'Completada' ? 'Reabrir' : 'Completar'}
+  </button>
+</div>
                   </article>
                 ))}
               </div>
