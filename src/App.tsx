@@ -3,14 +3,90 @@ import './App.css'
 
 function App() {
   const [vista, setVista] = useState('inicio')
+  const [pestanaCurso, setPestanaCurso] = useState('resumen')
 
   const cursos = [
     {
       id: 1,
       nombre: 'Ecuaciones Diferenciales',
       promedio: 'Sin notas',
-      pendientes: 5,
+      pendientes: 9,
       proximaActividad: 'EA1',
+    },
+  ]
+
+  const actividades = [
+    {
+      id: 1,
+      nombre: 'EA1',
+      tipo: 'Evaluación en aula',
+      semana: 'Semana 2',
+      fecha: 'Fecha exacta pendiente',
+      estado: 'No iniciada',
+    },
+    {
+      id: 2,
+      nombre: 'RC1',
+      tipo: 'Resolución de casos',
+      semana: 'Semanas 3 y 4',
+      fecha: 'Entrega: 19/04/2026',
+      estado: 'No iniciada',
+    },
+    {
+      id: 3,
+      nombre: 'EA2',
+      tipo: 'Evaluación en aula',
+      semana: 'Semana 4',
+      fecha: 'Fecha exacta pendiente',
+      estado: 'No iniciada',
+    },
+    {
+      id: 4,
+      nombre: 'TA1',
+      tipo: 'Tarea',
+      semana: 'Semana 4',
+      fecha: 'Entrega: 14/04/2026',
+      estado: 'No iniciada',
+    },
+    {
+      id: 5,
+      nombre: 'EA3',
+      tipo: 'Evaluación en aula',
+      semana: 'Semana 6',
+      fecha: 'Fecha exacta pendiente',
+      estado: 'No iniciada',
+    },
+    {
+      id: 6,
+      nombre: 'RC2',
+      tipo: 'Resolución de casos',
+      semana: 'Semanas 6 y 7',
+      fecha: 'Entrega: 10/05/2026',
+      estado: 'No iniciada',
+    },
+    {
+      id: 7,
+      nombre: 'TA2',
+      tipo: 'Tarea',
+      semana: 'Semana 7',
+      fecha: 'Entrega: 05/05/2026',
+      estado: 'No iniciada',
+    },
+    {
+      id: 8,
+      nombre: 'P1',
+      tipo: 'Proyecto ABP - primera exposición',
+      semana: 'Semana 7',
+      fecha: 'Fecha exacta pendiente',
+      estado: 'No iniciada',
+    },
+    {
+      id: 9,
+      nombre: 'EP',
+      tipo: 'Examen parcial',
+      semana: 'Semana 7',
+      fecha: 'Fecha exacta pendiente',
+      estado: 'No iniciada',
     },
   ]
 
@@ -54,7 +130,7 @@ function App() {
 
           <div className="summary-grid">
             <article className="summary-card">
-              <strong>0</strong>
+              <strong>9</strong>
               <span>Pendientes</span>
             </article>
 
@@ -82,7 +158,13 @@ function App() {
                     <p>Próxima actividad: {curso.proximaActividad}</p>
                   </div>
 
-                  <button type="button" onClick={() => setVista('curso')}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVista('curso')
+                      setPestanaCurso('resumen')
+                    }}
+                  >
                     Abrir curso
                   </button>
                 </article>
@@ -117,60 +199,112 @@ function App() {
           </div>
 
           <nav className="course-tabs">
-            <button type="button" className="active-tab">
+            <button
+              type="button"
+              className={pestanaCurso === 'resumen' ? 'active-tab' : ''}
+              onClick={() => setPestanaCurso('resumen')}
+            >
               Resumen
             </button>
-            <button type="button">Actividades</button>
-            <button type="button">Notas</button>
-            <button type="button">Calendario</button>
+
+            <button
+              type="button"
+              className={pestanaCurso === 'actividades' ? 'active-tab' : ''}
+              onClick={() => setPestanaCurso('actividades')}
+            >
+              Actividades
+            </button>
+
+            <button type="button" disabled>
+              Notas
+            </button>
+
+            <button type="button" disabled>
+              Calendario
+            </button>
           </nav>
 
-          <div className="course-summary-grid">
-            <article className="summary-card">
-              <strong>—</strong>
-              <span>Promedio actual</span>
-            </article>
+          {pestanaCurso === 'resumen' && (
+            <>
+              <div className="course-summary-grid">
+                <article className="summary-card">
+                  <strong>—</strong>
+                  <span>Promedio actual</span>
+                </article>
 
-            <article className="summary-card">
-              <strong>0 %</strong>
-              <span>Ya evaluado</span>
-            </article>
+                <article className="summary-card">
+                  <strong>0 %</strong>
+                  <span>Ya evaluado</span>
+                </article>
 
-            <article className="summary-card">
-              <strong>5</strong>
-              <span>Pendientes</span>
-            </article>
-          </div>
+                <article className="summary-card">
+                  <strong>9</strong>
+                  <span>Pendientes</span>
+                </article>
+              </div>
 
-          <article className="next-activity">
-            <p>Próxima actividad</p>
-            <h2>EA1 — Evaluación en aula</h2>
-            <span>Semana 2 · Fecha exacta pendiente</span>
-          </article>
+              <article className="next-activity">
+                <p>Próxima actividad</p>
+                <h2>EA1 — Evaluación en aula</h2>
+                <span>Semana 2 · Fecha exacta pendiente</span>
+              </article>
 
-          <section className="grade-components">
-            <h2>Componentes de la nota</h2>
+              <section className="grade-components">
+                <h2>Componentes de la nota</h2>
 
-            <div className="grade-component">
-              <span>Examen parcial</span>
-              <strong>20 %</strong>
-            </div>
+                <div className="grade-component">
+                  <span>Examen parcial</span>
+                  <strong>20 %</strong>
+                </div>
 
-            <div className="grade-component">
-              <span>Evaluación continua 1</span>
-              <strong>25 %</strong>
-            </div>
+                <div className="grade-component">
+                  <span>Evaluación continua 1</span>
+                  <strong>25 %</strong>
+                </div>
 
-            <div className="grade-component">
-              <span>Evaluación continua 2</span>
-              <strong>25 %</strong>
-            </div>
+                <div className="grade-component">
+                  <span>Evaluación continua 2</span>
+                  <strong>25 %</strong>
+                </div>
 
-            <div className="grade-component">
-              <span>Examen final</span>
-              <strong>30 %</strong>
-            </div>
-          </section>
+                <div className="grade-component">
+                  <span>Examen final</span>
+                  <strong>30 %</strong>
+                </div>
+              </section>
+            </>
+          )}
+
+          {pestanaCurso === 'actividades' && (
+            <section className="activities-panel">
+              <div className="activities-header">
+                <div>
+                  <p>Organización del curso</p>
+                  <h2>Actividades</h2>
+                </div>
+
+                <button type="button">+ Agregar actividad</button>
+              </div>
+
+              <div className="activities-list">
+                {actividades.map((actividad) => (
+                  <article className="activity-card" key={actividad.id}>
+                    <div>
+                      <h3>{actividad.nombre}</h3>
+                      <p>{actividad.tipo}</p>
+
+                      <div className="activity-meta">
+                        <span>{actividad.semana}</span>
+                        <span>{actividad.fecha}</span>
+                      </div>
+                    </div>
+
+                    <span className="status-badge">{actividad.estado}</span>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
         </section>
       )}
     </main>
