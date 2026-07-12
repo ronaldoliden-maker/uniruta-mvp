@@ -1,6 +1,90 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
+type Actividad = {
+  id: number
+  nombre: string
+  tipo: string
+  semana: string
+  fecha: string
+  estado: 'No iniciada' | 'Completada'
+}
+
+const actividadesIniciales: Actividad[] = [
+  {
+    id: 1,
+    nombre: 'EA1',
+    tipo: 'Evaluación en aula',
+    semana: 'Semana 2',
+    fecha: 'Fecha exacta pendiente',
+    estado: 'No iniciada',
+  },
+  {
+    id: 2,
+    nombre: 'RC1',
+    tipo: 'Resolución de casos',
+    semana: 'Semanas 3 y 4',
+    fecha: 'Entrega: 19/04/2026',
+    estado: 'No iniciada',
+  },
+  {
+    id: 3,
+    nombre: 'EA2',
+    tipo: 'Evaluación en aula',
+    semana: 'Semana 4',
+    fecha: 'Fecha exacta pendiente',
+    estado: 'No iniciada',
+  },
+  {
+    id: 4,
+    nombre: 'TA1',
+    tipo: 'Tarea',
+    semana: 'Semana 4',
+    fecha: 'Entrega: 14/04/2026',
+    estado: 'No iniciada',
+  },
+  {
+    id: 5,
+    nombre: 'EA3',
+    tipo: 'Evaluación en aula',
+    semana: 'Semana 6',
+    fecha: 'Fecha exacta pendiente',
+    estado: 'No iniciada',
+  },
+  {
+    id: 6,
+    nombre: 'RC2',
+    tipo: 'Resolución de casos',
+    semana: 'Semanas 6 y 7',
+    fecha: 'Entrega: 10/05/2026',
+    estado: 'No iniciada',
+  },
+  {
+    id: 7,
+    nombre: 'TA2',
+    tipo: 'Tarea',
+    semana: 'Semana 7',
+    fecha: 'Entrega: 05/05/2026',
+    estado: 'No iniciada',
+  },
+  {
+    id: 8,
+    nombre: 'P1',
+    tipo: 'Proyecto ABP - primera exposición',
+    semana: 'Semana 7',
+    fecha: 'Fecha exacta pendiente',
+    estado: 'No iniciada',
+  },
+  {
+    id: 9,
+    nombre: 'EP',
+    tipo: 'Examen parcial',
+    semana: 'Semana 7',
+    fecha: 'Fecha exacta pendiente',
+    estado: 'No iniciada',
+  },
+]
+
 function App() {
   const [vista, setVista] = useState('inicio')
   const [pestanaCurso, setPestanaCurso] = useState('resumen')
@@ -14,96 +98,30 @@ function App() {
     null,
   )
 
+  const [notaEA1, setNotaEA1] = useState('')
+  const [notaEA2, setNotaEA2] = useState('')
+  const [notaEA3, setNotaEA3] = useState('')
 
-  const [actividades, setActividades] = useState(() => {
+  const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
     if (actividadesGuardadas) {
-      return JSON.parse(actividadesGuardadas)
+      try {
+        return JSON.parse(actividadesGuardadas) as Actividad[]
+      } catch {
+        localStorage.removeItem('uniruta-actividades')
+      }
     }
 
-    return [
-    {
-      id: 1,
-      nombre: 'EA1',
-      tipo: 'Evaluación en aula',
-      semana: 'Semana 2',
-      fecha: 'Fecha exacta pendiente',
-      estado: 'No iniciada',
-    },
-    {
-      id: 2,
-      nombre: 'RC1',
-      tipo: 'Resolución de casos',
-      semana: 'Semanas 3 y 4',
-      fecha: 'Entrega: 19/04/2026',
-      estado: 'No iniciada',
-    },
-    {
-      id: 3,
-      nombre: 'EA2',
-      tipo: 'Evaluación en aula',
-      semana: 'Semana 4',
-      fecha: 'Fecha exacta pendiente',
-      estado: 'No iniciada',
-    },
-    {
-      id: 4,
-      nombre: 'TA1',
-      tipo: 'Tarea',
-      semana: 'Semana 4',
-      fecha: 'Entrega: 14/04/2026',
-      estado: 'No iniciada',
-    },
-    {
-      id: 5,
-      nombre: 'EA3',
-      tipo: 'Evaluación en aula',
-      semana: 'Semana 6',
-      fecha: 'Fecha exacta pendiente',
-      estado: 'No iniciada',
-    },
-    {
-      id: 6,
-      nombre: 'RC2',
-      tipo: 'Resolución de casos',
-      semana: 'Semanas 6 y 7',
-      fecha: 'Entrega: 10/05/2026',
-      estado: 'No iniciada',
-    },
-    {
-      id: 7,
-      nombre: 'TA2',
-      tipo: 'Tarea',
-      semana: 'Semana 7',
-      fecha: 'Entrega: 05/05/2026',
-      estado: 'No iniciada',
-    },
-    {
-      id: 8,
-      nombre: 'P1',
-      tipo: 'Proyecto ABP - primera exposición',
-      semana: 'Semana 7',
-      fecha: 'Fecha exacta pendiente',
-      estado: 'No iniciada',
-    },
-    {
-      id: 9,
-      nombre: 'EP',
-      tipo: 'Examen parcial',
-      semana: 'Semana 7',
-      fecha: 'Fecha exacta pendiente',
-      estado: 'No iniciada',
-    },
-  ]
-})
+    return actividadesIniciales
+  })
 
-useEffect(() => {
-  localStorage.setItem(
-    'uniruta-actividades',
-    JSON.stringify(actividades),
-  )
-}, [actividades])
+  useEffect(() => {
+    localStorage.setItem(
+      'uniruta-actividades',
+      JSON.stringify(actividades),
+    )
+  }, [actividades])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -136,8 +154,8 @@ useEffect(() => {
       promedio: 'Sin notas',
       pendientes,
       proximaActividad: proximaActividad
-  ? proximaActividad.nombre
-  : 'Sin actividades pendientes',
+        ? proximaActividad.nombre
+        : 'Sin actividades pendientes',
     },
   ]
 
@@ -181,6 +199,7 @@ useEffect(() => {
 
   function formatearFecha(fecha: string) {
     const [anio, mes, dia] = fecha.split('-')
+
     return `${dia}/${mes}/${anio}`
   }
 
@@ -188,16 +207,16 @@ useEffect(() => {
     const coincidencia = fechaGuardada.match(
       /(\d{2})\/(\d{2})\/(\d{4})/,
     )
-  
+
     if (!coincidencia) {
       return ''
     }
-  
+
     const [, dia, mes, anio] = coincidencia
-  
+
     return `${anio}-${mes}-${dia}`
   }
-  
+
   function limpiarFormulario() {
     setNombreActividad('')
     setTipoActividad('Tarea')
@@ -206,7 +225,7 @@ useEffect(() => {
     setActividadEditandoId(null)
     setMostrarFormulario(false)
   }
-  
+
   function abrirFormularioNuevo() {
     setNombreActividad('')
     setTipoActividad('Tarea')
@@ -215,16 +234,16 @@ useEffect(() => {
     setActividadEditandoId(null)
     setMostrarFormulario(true)
   }
-  
+
   function abrirFormularioEdicion(id: number) {
     const actividadSeleccionada = actividades.find(
       (actividad) => actividad.id === id,
     )
-  
+
     if (!actividadSeleccionada) {
       return
     }
-  
+
     setNombreActividad(actividadSeleccionada.nombre)
     setTipoActividad(actividadSeleccionada.tipo)
     setSemanaActividad(
@@ -237,14 +256,13 @@ useEffect(() => {
     setMostrarFormulario(true)
   }
 
-
   function agregarActividad(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-  
+
     if (!nombreActividad.trim() || !semanaActividad) {
       return
     }
-  
+
     const datosActividad = {
       nombre: nombreActividad.trim(),
       tipo: tipoActividad,
@@ -252,9 +270,8 @@ useEffect(() => {
       fecha: fechaActividad
         ? `Fecha: ${formatearFecha(fechaActividad)}`
         : 'Fecha exacta pendiente',
-      estado: 'No iniciada',
     }
-  
+
     if (actividadEditandoId !== null) {
       setActividades(
         actividades.map((actividad) =>
@@ -262,22 +279,45 @@ useEffect(() => {
             ? {
                 ...actividad,
                 ...datosActividad,
-                estado: actividad.estado,
               }
             : actividad,
         ),
       )
     } else {
-      const nuevaActividad = {
+      const nuevaActividad: Actividad = {
         id: Date.now(),
         ...datosActividad,
+        estado: 'No iniciada',
       }
-  
+
       setActividades([...actividades, nuevaActividad])
     }
-  
+
     limpiarFormulario()
   }
+
+  function actualizarNota(
+    valor: string,
+    guardarNota: (nuevoValor: string) => void,
+  ) {
+    if (valor === '') {
+      guardarNota('')
+      return
+    }
+
+    const numero = Number(valor)
+
+    if (numero >= 0 && numero <= 20) {
+      guardarNota(valor)
+    }
+  }
+
+  const estanCompletasEA123 =
+    notaEA1 !== '' && notaEA2 !== '' && notaEA3 !== ''
+
+  const pea123 = estanCompletasEA123
+    ? (Number(notaEA1) + Number(notaEA2) + Number(notaEA3)) / 3
+    : null
 
   return (
     <main className="app">
@@ -319,7 +359,7 @@ useEffect(() => {
 
           <div className="summary-grid">
             <article className="summary-card">
-            <strong>{pendientes}</strong>
+              <strong>{pendientes}</strong>
               <span>Pendientes</span>
             </article>
 
@@ -431,30 +471,32 @@ useEffect(() => {
                 </article>
 
                 <article className="summary-card">
-                <strong>{pendientes}</strong>
+                  <strong>{pendientes}</strong>
                   <span>Pendientes</span>
                 </article>
               </div>
 
               {proximaActividad ? (
-  <article className="next-activity">
-    <p>Próxima actividad</p>
+                <article className="next-activity">
+                  <p>Próxima actividad</p>
 
-    <h2>
-      {proximaActividad.nombre} — {proximaActividad.tipo}
-    </h2>
+                  <h2>
+                    {proximaActividad.nombre} — {proximaActividad.tipo}
+                  </h2>
 
-    <span>
-      {proximaActividad.semana} · {proximaActividad.fecha}
-    </span>
-  </article>
-) : (
-  <article className="next-activity">
-    <p>Próxima actividad</p>
-    <h2>No tienes actividades pendientes</h2>
-    <span>Has completado todas las actividades registradas.</span>
-  </article>
-)}
+                  <span>
+                    {proximaActividad.semana} · {proximaActividad.fecha}
+                  </span>
+                </article>
+              ) : (
+                <article className="next-activity">
+                  <p>Próxima actividad</p>
+                  <h2>No tienes actividades pendientes</h2>
+                  <span>
+                    Has completado todas las actividades registradas.
+                  </span>
+                </article>
+              )}
 
               <section className="grade-components">
                 <h2>Componentes de la nota</h2>
@@ -486,8 +528,20 @@ useEffect(() => {
             <section className="activities-panel">
               <div className="activities-header">
                 <div>
-                {mostrarFormulario && (
-                <form className="activity-form" onSubmit={agregarActividad}>
+                  <p>Organización del curso</p>
+                  <h2>Actividades</h2>
+                </div>
+
+                <button type="button" onClick={abrirFormularioNuevo}>
+                  + Agregar actividad
+                </button>
+              </div>
+
+              {mostrarFormulario && (
+                <form
+                  className="activity-form"
+                  onSubmit={agregarActividad}
+                >
                   <h3>
                     {actividadEditandoId !== null
                       ? 'Editar actividad'
@@ -497,6 +551,7 @@ useEffect(() => {
                   <div className="form-grid">
                     <label className="form-field">
                       <span>Nombre</span>
+
                       <input
                         type="text"
                         value={nombreActividad}
@@ -510,6 +565,7 @@ useEffect(() => {
 
                     <label className="form-field">
                       <span>Tipo</span>
+
                       <select
                         value={tipoActividad}
                         onChange={(event) =>
@@ -528,6 +584,7 @@ useEffect(() => {
 
                     <label className="form-field">
                       <span>Semana</span>
+
                       <input
                         type="number"
                         min="1"
@@ -543,6 +600,7 @@ useEffect(() => {
 
                     <label className="form-field">
                       <span>Fecha exacta opcional</span>
+
                       <input
                         type="date"
                         value={fechaActividad}
@@ -570,17 +628,9 @@ useEffect(() => {
                   </div>
                 </form>
               )}
-                  <p>Organización del curso</p>
-                  <h2>Actividades</h2>
-                </div>
-
-                <button type="button" onClick={abrirFormularioNuevo}>
-                  + Agregar actividad
-                </button>
-              </div>
 
               <div className="activities-list">
-              {actividadesOrdenadas.map((actividad) => (
+                {actividadesOrdenadas.map((actividad) => (
                   <article className="activity-card" key={actividad.id}>
                     <div>
                       <h3>{actividad.nombre}</h3>
@@ -593,163 +643,248 @@ useEffect(() => {
                     </div>
 
                     <div className="activity-actions">
+                      <span
+                        className={`status-badge ${
+                          actividad.estado === 'Completada'
+                            ? 'completed-status'
+                            : ''
+                        }`}
+                      >
+                        {actividad.estado}
+                      </span>
 
-                      
-  <span
-    className={`status-badge ${
-      actividad.estado === 'Completada' ? 'completed-status' : ''
-    }`}
-  >
-    {actividad.estado}
-  </span>
+                      <button
+                        type="button"
+                        className="activity-status-button"
+                        onClick={() =>
+                          alternarEstadoActividad(actividad.id)
+                        }
+                      >
+                        {actividad.estado === 'Completada'
+                          ? 'Reabrir'
+                          : 'Completar'}
+                      </button>
 
-  <button
-    type="button"
-    className="activity-status-button"
-    onClick={() => alternarEstadoActividad(actividad.id)}
-  >
-    {actividad.estado === 'Completada' ? 'Reabrir' : 'Completar'}
-  </button>
+                      <button
+                        type="button"
+                        className="edit-activity-button"
+                        onClick={() =>
+                          abrirFormularioEdicion(actividad.id)
+                        }
+                      >
+                        Editar
+                      </button>
 
-  <button
-  type="button"
-  className="edit-activity-button"
-  onClick={() => abrirFormularioEdicion(actividad.id)}
->
-  Editar
-</button>
-
-  <button
-    type="button"
-    className="delete-activity-button"
-    onClick={() => eliminarActividad(actividad.id)}
-  >
-    Eliminar
-  </button>
-</div>
+                      <button
+                        type="button"
+                        className="delete-activity-button"
+                        onClick={() => eliminarActividad(actividad.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </article>
                 ))}
               </div>
             </section>
           )}
+
           {pestanaCurso === 'notas' && (
-  <section className="grades-panel">
-    <div className="grades-heading">
-      <p>Calculadora del curso</p>
-      <h2>Sistema de evaluación</h2>
-      <span>
-        Nota final = 20 % EP + 30 % EF + 25 % EC1 + 25 % EC2
-      </span>
-    </div>
+            <section className="grades-panel">
+              <div className="grades-heading">
+                <p>Calculadora del curso</p>
+                <h2>Sistema de evaluación</h2>
 
-    <div className="final-grade-grid">
-      <article className="final-grade-card">
-        <span>Promedio actual</span>
-        <strong>—</strong>
-      </article>
+                <span>
+                  Nota final = 20 % EP + 30 % EF + 25 % EC1 + 25 % EC2
+                </span>
+              </div>
 
-      <article className="final-grade-card">
-        <span>Porcentaje evaluado</span>
-        <strong>0 %</strong>
-      </article>
+              <div className="final-grade-grid">
+                <article className="final-grade-card">
+                  <span>Promedio actual</span>
+                  <strong>—</strong>
+                </article>
 
-      <article className="final-grade-card">
-        <span>Nota mínima</span>
-        <strong>10.5</strong>
-      </article>
-    </div>
+                <article className="final-grade-card">
+                  <span>Porcentaje evaluado</span>
+                  <strong>0 %</strong>
+                </article>
 
-    <section className="grade-tree">
-      <article className="grade-group">
-        <div className="grade-group-title">
-          <div>
-            <h3>Examen parcial</h3>
-            <p>Nota directa sobre 20</p>
-          </div>
+                <article className="final-grade-card">
+                  <span>Nota mínima</span>
+                  <strong>10.5</strong>
+                </article>
+              </div>
 
-          <strong>20 %</strong>
-        </div>
-      </article>
+              <section className="grade-tree">
+                <article className="grade-group">
+                  <div className="grade-group-title">
+                    <div>
+                      <h3>Examen parcial</h3>
+                      <p>Nota directa sobre 20</p>
+                    </div>
 
-      <article className="grade-group">
-        <div className="grade-group-title">
-          <div>
-            <h3>Evaluación continua 1</h3>
-            <p>Se redondea antes de calcular la nota final</p>
-          </div>
+                    <strong>20 %</strong>
+                  </div>
+                </article>
 
-          <strong>25 %</strong>
-        </div>
+                <article className="grade-group">
+                  <div className="grade-group-title">
+                    <div>
+                      <h3>Evaluación continua 1</h3>
+                      <p>
+                        Se redondea antes de calcular la nota final
+                      </p>
+                    </div>
 
-        <div className="subcomponents-list">
-          <div>
-            <span>PEA123</span>
-            <strong>70 %</strong>
-          </div>
+                    <strong>25 %</strong>
+                  </div>
 
-          <div>
-            <span>PTA12</span>
-            <strong>10 %</strong>
-          </div>
+                  <div className="subcomponents-list">
+                    <div>
+                      <span>PEA123</span>
+                      <strong>70 %</strong>
+                    </div>
 
-          <div>
-            <span>PRC12</span>
-            <strong>10 %</strong>
-          </div>
+                    <div>
+                      <span>PTA12</span>
+                      <strong>10 %</strong>
+                    </div>
 
-          <div>
-            <span>P1</span>
-            <strong>10 %</strong>
-          </div>
-        </div>
-      </article>
+                    <div>
+                      <span>PRC12</span>
+                      <strong>10 %</strong>
+                    </div>
 
-      <article className="grade-group">
-        <div className="grade-group-title">
-          <div>
-            <h3>Evaluación continua 2</h3>
-            <p>Se redondea antes de calcular la nota final</p>
-          </div>
+                    <div>
+                      <span>P1</span>
+                      <strong>10 %</strong>
+                    </div>
+                  </div>
 
-          <strong>25 %</strong>
-        </div>
+                  <div className="grade-input-section">
+                    <h4>Evaluaciones en aula</h4>
 
-        <div className="subcomponents-list">
-          <div>
-            <span>PEA456</span>
-            <strong>60 %</strong>
-          </div>
+                    <div className="grade-input-grid">
+                      <label className="grade-input-field">
+                        <span>EA1</span>
 
-          <div>
-            <span>PTA34</span>
-            <strong>10 %</strong>
-          </div>
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          step="0.01"
+                          value={notaEA1}
+                          onChange={(event) =>
+                            actualizarNota(
+                              event.target.value,
+                              setNotaEA1,
+                            )
+                          }
+                          placeholder="0 a 20"
+                        />
+                      </label>
 
-          <div>
-            <span>PRC34</span>
-            <strong>10 %</strong>
-          </div>
+                      <label className="grade-input-field">
+                        <span>EA2</span>
 
-          <div>
-            <span>P2 + P3</span>
-            <strong>20 %</strong>
-          </div>
-        </div>
-      </article>
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          step="0.01"
+                          value={notaEA2}
+                          onChange={(event) =>
+                            actualizarNota(
+                              event.target.value,
+                              setNotaEA2,
+                            )
+                          }
+                          placeholder="0 a 20"
+                        />
+                      </label>
 
-      <article className="grade-group">
-        <div className="grade-group-title">
-          <div>
-            <h3>Examen final</h3>
-            <p>Nota directa sobre 20</p>
-          </div>
+                      <label className="grade-input-field">
+                        <span>EA3</span>
 
-          <strong>30 %</strong>
-        </div>
-      </article>
-    </section>
-  </section>
-)}
+                        <input
+                          type="number"
+                          min="0"
+                          max="20"
+                          step="0.01"
+                          value={notaEA3}
+                          onChange={(event) =>
+                            actualizarNota(
+                              event.target.value,
+                              setNotaEA3,
+                            )
+                          }
+                          placeholder="0 a 20"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="calculated-grade">
+                      <span>Promedio PEA123</span>
+
+                      <strong>
+                        {pea123 !== null
+                          ? pea123.toFixed(2)
+                          : 'Pendiente'}
+                      </strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="grade-group">
+                  <div className="grade-group-title">
+                    <div>
+                      <h3>Evaluación continua 2</h3>
+                      <p>
+                        Se redondea antes de calcular la nota final
+                      </p>
+                    </div>
+
+                    <strong>25 %</strong>
+                  </div>
+
+                  <div className="subcomponents-list">
+                    <div>
+                      <span>PEA456</span>
+                      <strong>60 %</strong>
+                    </div>
+
+                    <div>
+                      <span>PTA34</span>
+                      <strong>10 %</strong>
+                    </div>
+
+                    <div>
+                      <span>PRC34</span>
+                      <strong>10 %</strong>
+                    </div>
+
+                    <div>
+                      <span>P2 + P3</span>
+                      <strong>20 %</strong>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="grade-group">
+                  <div className="grade-group-title">
+                    <div>
+                      <h3>Examen final</h3>
+                      <p>Nota directa sobre 20</p>
+                    </div>
+
+                    <strong>30 %</strong>
+                  </div>
+                </article>
+              </section>
+            </section>
+          )}
         </section>
       )}
     </main>

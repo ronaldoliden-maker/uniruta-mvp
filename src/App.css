@@ -757,3 +757,75 @@
     font-size: 18px;
   }
 }
+
+.grade-input-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.grade-input-section h4 {
+  margin: 0 0 16px;
+  color: #111827;
+  font-size: 17px;
+}
+
+.grade-input-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.grade-input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.grade-input-field span {
+  color: #374151;
+  font-weight: 700;
+}
+
+.grade-input-field input {
+  width: 100%;
+  padding: 11px 12px;
+  color: #111827;
+  background-color: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  outline: none;
+}
+
+.grade-input-field input:focus {
+  border-color: #1557b0;
+  box-shadow: 0 0 0 3px rgba(21, 87, 176, 0.12);
+}
+
+.calculated-grade {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 18px;
+  padding: 16px;
+  background-color: #eaf2ff;
+  border-radius: 10px;
+}
+
+.calculated-grade span {
+  color: #374151;
+  font-weight: 700;
+}
+
+.calculated-grade strong {
+  color: #1557b0;
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .grade-input-grid {
+    grid-template-columns: 1fr;
+  }
+}
