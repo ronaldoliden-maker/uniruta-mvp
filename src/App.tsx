@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
 function App() {
@@ -13,7 +13,14 @@ function App() {
 
 
 
-  const [actividades, setActividades] = useState([
+  const [actividades, setActividades] = useState(() => {
+    const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
+
+    if (actividadesGuardadas) {
+      return JSON.parse(actividadesGuardadas)
+    }
+
+    return [
     {
       id: 1,
       nombre: 'EA1',
@@ -86,7 +93,15 @@ function App() {
       fecha: 'Fecha exacta pendiente',
       estado: 'No iniciada',
     },
-  ])
+  ]
+})
+
+useEffect(() => {
+  localStorage.setItem(
+    'uniruta-actividades',
+    JSON.stringify(actividades),
+  )
+}, [actividades])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
