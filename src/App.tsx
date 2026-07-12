@@ -152,6 +152,22 @@ function App() {
     () => localStorage.getItem('uniruta-nota-ta4') ?? '',
   )
 
+  const [notaRC3, setNotaRC3] = useState(
+    () => localStorage.getItem('uniruta-nota-rc3') ?? '',
+  )
+  
+  const [notaRC4, setNotaRC4] = useState(
+    () => localStorage.getItem('uniruta-nota-rc4') ?? '',
+  )
+
+  const [notaP2, setNotaP2] = useState(
+    () => localStorage.getItem('uniruta-nota-p2') ?? '',
+  )
+  
+  const [notaP3, setNotaP3] = useState(
+    () => localStorage.getItem('uniruta-nota-p3') ?? '',
+  )
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -200,6 +216,17 @@ function App() {
     localStorage.setItem('uniruta-nota-ta3', notaTA3)
     localStorage.setItem('uniruta-nota-ta4', notaTA4)
   }, [notaTA3, notaTA4])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-rc3', notaRC3)
+    localStorage.setItem('uniruta-nota-rc4', notaRC4)
+  }, [notaRC3, notaRC4])
+
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-p2', notaP2)
+    localStorage.setItem('uniruta-nota-p3', notaP3)
+  }, [notaP2, notaP3])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -390,6 +417,23 @@ function App() {
     }
   }
 
+  function actualizarNotaConMaximo(
+    valor: string,
+    maximo: number,
+    guardarNota: (nuevoValor: string) => void,
+  ) {
+    if (valor === '') {
+      guardarNota('')
+      return
+    }
+  
+    const numero = Number(valor)
+  
+    if (numero >= 0 && numero <= maximo) {
+      guardarNota(valor)
+    }
+  }
+
   const pea123 =
   (Number(notaEA1 || 0) +
     Number(notaEA2 || 0) +
@@ -421,7 +465,24 @@ const ec1SinRedondear =
 
     const pta34 =
   (Number(notaTA3 || 0) + Number(notaTA4 || 0)) / 2
+
+  const prc34 =
+  (Number(notaRC3 || 0) + Number(notaRC4 || 0)) / 2
   
+
+  const p2 = Number(notaP2 || 0)
+  const p3 = Number(notaP3 || 0)
+  
+  const proyecto2 = p2 + p3
+  
+  const ec2SinRedondear =
+    pea456 * 0.6 +
+    pta34 * 0.1 +
+    prc34 * 0.1 +
+    proyecto2 * 0.2
+  
+  const ec2 = Math.round(ec2SinRedondear)
+
 
   return (
     <main className="app">
@@ -1190,6 +1251,110 @@ const ec1SinRedondear =
   </div>
 </div>
 
+<div className="grade-input-section">
+  <h4>Resolución de casos</h4>
+
+  <div className="grade-input-grid">
+    <label className="grade-input-field">
+      <span>RC3</span>
+
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaRC3}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaRC3)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+
+    <label className="grade-input-field">
+      <span>RC4</span>
+
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaRC4}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaRC4)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+  </div>
+
+  <div className="calculated-grade">
+    <span>Promedio provisional PRC34</span>
+    <strong>{prc34.toFixed(2)}</strong>
+  </div>
+</div>
+
+
+<div className="grade-input-section">
+  <h4>Proyecto ABP</h4>
+
+  <div className="grade-input-grid">
+    <label className="grade-input-field">
+      <span>P2 — máximo 5</span>
+
+      <input
+        type="number"
+        min="0"
+        max="5"
+        step="0.01"
+        value={notaP2}
+        onChange={(event) =>
+          actualizarNotaConMaximo(
+            event.target.value,
+            5,
+            setNotaP2,
+          )
+        }
+        placeholder="0 a 5"
+      />
+    </label>
+
+    <label className="grade-input-field">
+      <span>P3 — máximo 15</span>
+
+      <input
+        type="number"
+        min="0"
+        max="15"
+        step="0.01"
+        value={notaP3}
+        onChange={(event) =>
+          actualizarNotaConMaximo(
+            event.target.value,
+            15,
+            setNotaP3,
+          )
+        }
+        placeholder="0 a 15"
+      />
+    </label>
+  </div>
+
+  <div className="calculated-grade">
+    <span>P2 + P3</span>
+    <strong>{proyecto2.toFixed(2)} / 20</strong>
+  </div>
+
+  <div className="calculated-grade">
+    <span>EC2 antes del redondeo</span>
+    <strong>{ec2SinRedondear.toFixed(2)}</strong>
+  </div>
+
+  <div className="calculated-grade">
+    <span>EC2 redondeada</span>
+    <strong>{ec2}</strong>
+  </div>
+</div>
 
                 <article className="grade-group">
                   <div className="grade-group-title">
