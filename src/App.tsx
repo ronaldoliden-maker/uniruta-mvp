@@ -155,6 +155,28 @@ useEffect(() => {
     )
   }
 
+  function eliminarActividad(id: number) {
+    const actividadSeleccionada = actividades.find(
+      (actividad) => actividad.id === id,
+    )
+
+    if (!actividadSeleccionada) {
+      return
+    }
+
+    const confirmarEliminacion = window.confirm(
+      `¿Seguro que deseas eliminar "${actividadSeleccionada.nombre}"?`,
+    )
+
+    if (!confirmarEliminacion) {
+      return
+    }
+
+    setActividades(
+      actividades.filter((actividad) => actividad.id !== id),
+    )
+  }
+
   function formatearFecha(fecha: string) {
     const [anio, mes, dia] = fecha.split('-')
     return `${dia}/${mes}/${anio}`
@@ -489,6 +511,8 @@ useEffect(() => {
                     </div>
 
                     <div className="activity-actions">
+
+                      
   <span
     className={`status-badge ${
       actividad.estado === 'Completada' ? 'completed-status' : ''
@@ -503,6 +527,14 @@ useEffect(() => {
     onClick={() => alternarEstadoActividad(actividad.id)}
   >
     {actividad.estado === 'Completada' ? 'Reabrir' : 'Completar'}
+  </button>
+
+  <button
+    type="button"
+    className="delete-activity-button"
+    onClick={() => eliminarActividad(actividad.id)}
+  >
+    Eliminar
   </button>
 </div>
                   </article>

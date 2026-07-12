@@ -586,3 +586,23 @@
     width: 100%;
   }
 }
+
+.delete-activity-button {
+  padding: 8px 12px;
+  color: #b42318;
+  background-color: #feeceb;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-activity-button:hover {
+  background-color: #fdd8d5;
+}
+
+@media (max-width: 600px) {
+  .delete-activity-button {
+    width: 100%;
+  }
+}
