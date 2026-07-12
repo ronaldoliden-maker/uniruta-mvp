@@ -131,6 +131,19 @@ function App() {
     () => localStorage.getItem('uniruta-nota-p1') ?? '',
   )
 
+  const [notaEA4, setNotaEA4] = useState(
+    () => localStorage.getItem('uniruta-nota-ea4') ?? '',
+  )
+  
+  const [notaEA5, setNotaEA5] = useState(
+    () => localStorage.getItem('uniruta-nota-ea5') ?? '',
+  )
+  
+  const [notaEA6, setNotaEA6] = useState(
+    () => localStorage.getItem('uniruta-nota-ea6') ?? '',
+  )
+
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -168,6 +181,12 @@ function App() {
     localStorage.setItem('uniruta-nota-rc2', notaRC2)
     localStorage.setItem('uniruta-nota-p1', notaP1)
   }, [notaRC1, notaRC2, notaP1])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-ea4', notaEA4)
+    localStorage.setItem('uniruta-nota-ea5', notaEA5)
+    localStorage.setItem('uniruta-nota-ea6', notaEA6)
+  }, [notaEA4, notaEA5, notaEA6])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -379,8 +398,15 @@ const ec1SinRedondear =
   prc12 * 0.1 +
   p1 * 0.1
 
-const ec1 = Math.round(ec1SinRedondear)
-    
+  const ec1 = Math.round(ec1SinRedondear)
+
+  const pea456 =
+    (Number(notaEA4 || 0) +
+      Number(notaEA5 || 0) +
+      Number(notaEA6 || 0)) /
+    3
+  
+
   return (
     <main className="app">
       <header className="topbar">
@@ -1014,39 +1040,96 @@ const ec1 = Math.round(ec1SinRedondear)
                 </article>
 
                 <article className="grade-group">
-                  <div className="grade-group-title">
-                    <div>
-                      <h3>Evaluación continua 2</h3>
-                      <p>
-                        Se redondea antes de calcular la nota final
-                      </p>
-                    </div>
+  <div className="grade-group-title">
+    <div>
+      <h3>Evaluación continua 2</h3>
+      <p>Se redondea antes de calcular la nota final</p>
+    </div>
 
-                    <strong>25 %</strong>
-                  </div>
+    <strong>25 %</strong>
+  </div>
 
-                  <div className="subcomponents-list">
-                    <div>
-                      <span>PEA456</span>
-                      <strong>60 %</strong>
-                    </div>
+  <div className="subcomponents-list">
+    <div>
+      <span>PEA456</span>
+      <strong>60 %</strong>
+    </div>
 
-                    <div>
-                      <span>PTA34</span>
-                      <strong>10 %</strong>
-                    </div>
+    <div>
+      <span>PTA34</span>
+      <strong>10 %</strong>
+    </div>
 
-                    <div>
-                      <span>PRC34</span>
-                      <strong>10 %</strong>
-                    </div>
+    <div>
+      <span>PRC34</span>
+      <strong>10 %</strong>
+    </div>
 
-                    <div>
-                      <span>P2 + P3</span>
-                      <strong>20 %</strong>
-                    </div>
-                  </div>
-                </article>
+    <div>
+      <span>P2 + P3</span>
+      <strong>20 %</strong>
+    </div>
+  </div>
+
+  <div className="grade-input-section">
+    <h4>Evaluaciones en aula</h4>
+
+    <div className="grade-input-grid">
+      <label className="grade-input-field">
+        <span>EA4</span>
+
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          value={notaEA4}
+          onChange={(event) =>
+            actualizarNota(event.target.value, setNotaEA4)
+          }
+          placeholder="0 a 20"
+        />
+      </label>
+
+      <label className="grade-input-field">
+        <span>EA5</span>
+
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          value={notaEA5}
+          onChange={(event) =>
+            actualizarNota(event.target.value, setNotaEA5)
+          }
+          placeholder="0 a 20"
+        />
+      </label>
+
+      <label className="grade-input-field">
+        <span>EA6</span>
+
+        <input
+          type="number"
+          min="0"
+          max="20"
+          step="0.01"
+          value={notaEA6}
+          onChange={(event) =>
+            actualizarNota(event.target.value, setNotaEA6)
+          }
+          placeholder="0 a 20"
+        />
+      </label>
+    </div>
+
+    <div className="calculated-grade">
+      <span>Promedio provisional PEA456</span>
+      <strong>{pea456.toFixed(2)}</strong>
+    </div>
+  </div>
+</article>
 
                 <article className="grade-group">
                   <div className="grade-group-title">
