@@ -144,6 +144,14 @@ function App() {
   )
 
 
+  const [notaTA3, setNotaTA3] = useState(
+    () => localStorage.getItem('uniruta-nota-ta3') ?? '',
+  )
+  
+  const [notaTA4, setNotaTA4] = useState(
+    () => localStorage.getItem('uniruta-nota-ta4') ?? '',
+  )
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -187,6 +195,11 @@ function App() {
     localStorage.setItem('uniruta-nota-ea5', notaEA5)
     localStorage.setItem('uniruta-nota-ea6', notaEA6)
   }, [notaEA4, notaEA5, notaEA6])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-ta3', notaTA3)
+    localStorage.setItem('uniruta-nota-ta4', notaTA4)
+  }, [notaTA3, notaTA4])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -405,6 +418,9 @@ const ec1SinRedondear =
       Number(notaEA5 || 0) +
       Number(notaEA6 || 0)) /
     3
+
+    const pta34 =
+  (Number(notaTA3 || 0) + Number(notaTA4 || 0)) / 2
   
 
   return (
@@ -1130,6 +1146,50 @@ const ec1SinRedondear =
     </div>
   </div>
 </article>
+
+<div className="grade-input-section">
+  <h4>Tareas</h4>
+
+  <div className="grade-input-grid">
+    <label className="grade-input-field">
+      <span>TA3</span>
+
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaTA3}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaTA3)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+
+    <label className="grade-input-field">
+      <span>TA4</span>
+
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaTA4}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaTA4)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+  </div>
+
+  <div className="calculated-grade">
+    <span>Promedio provisional PTA34</span>
+    <strong>{pta34.toFixed(2)}</strong>
+  </div>
+</div>
+
 
                 <article className="grade-group">
                   <div className="grade-group-title">
