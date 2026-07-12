@@ -118,6 +118,19 @@ function App() {
     () => localStorage.getItem('uniruta-nota-ta2') ?? '',
   )
 
+
+  const [notaRC1, setNotaRC1] = useState(
+    () => localStorage.getItem('uniruta-nota-rc1') ?? '',
+  )
+  
+  const [notaRC2, setNotaRC2] = useState(
+    () => localStorage.getItem('uniruta-nota-rc2') ?? '',
+  )
+  
+  const [notaP1, setNotaP1] = useState(
+    () => localStorage.getItem('uniruta-nota-p1') ?? '',
+  )
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -149,6 +162,12 @@ function App() {
     localStorage.setItem('uniruta-nota-ta1', notaTA1)
     localStorage.setItem('uniruta-nota-ta2', notaTA2)
   }, [notaTA1, notaTA2])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-nota-rc1', notaRC1)
+    localStorage.setItem('uniruta-nota-rc2', notaRC2)
+    localStorage.setItem('uniruta-nota-p1', notaP1)
+  }, [notaRC1, notaRC2, notaP1])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -348,6 +367,19 @@ function App() {
 
   const pta12 =
   (Number(notaTA1 || 0) + Number(notaTA2 || 0)) / 2
+
+  const prc12 =
+  (Number(notaRC1 || 0) + Number(notaRC2 || 0)) / 2
+
+const p1 = Number(notaP1 || 0)
+
+const ec1SinRedondear =
+  pea123 * 0.7 +
+  pta12 * 0.1 +
+  prc12 * 0.1 +
+  p1 * 0.1
+
+const ec1 = Math.round(ec1SinRedondear)
     
   return (
     <main className="app">
@@ -902,6 +934,78 @@ function App() {
   <span>Promedio provisional PTA12</span>
 
     <strong>{pta12.toFixed(2)}</strong>
+  </div>
+</div>
+
+<div className="grade-input-section">
+  <h4>Resolución de casos</h4>
+
+  <div className="grade-input-grid">
+    <label className="grade-input-field">
+      <span>RC1</span>
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaRC1}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaRC1)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+
+    <label className="grade-input-field">
+      <span>RC2</span>
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaRC2}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaRC2)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+  </div>
+
+  <div className="calculated-grade">
+    <span>Promedio provisional PRC12</span>
+    <strong>{prc12.toFixed(2)}</strong>
+  </div>
+</div>
+
+<div className="grade-input-section">
+  <h4>Proyecto ABP</h4>
+
+  <div className="grade-input-grid">
+    <label className="grade-input-field">
+      <span>P1</span>
+      <input
+        type="number"
+        min="0"
+        max="20"
+        step="0.01"
+        value={notaP1}
+        onChange={(event) =>
+          actualizarNota(event.target.value, setNotaP1)
+        }
+        placeholder="0 a 20"
+      />
+    </label>
+  </div>
+
+  <div className="calculated-grade">
+    <span>EC1 antes del redondeo</span>
+    <strong>{ec1SinRedondear.toFixed(2)}</strong>
+  </div>
+
+  <div className="calculated-grade">
+    <span>EC1 redondeada</span>
+    <strong>{ec1}</strong>
   </div>
 </div>
 
