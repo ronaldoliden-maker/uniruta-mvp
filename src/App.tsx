@@ -4,6 +4,16 @@ import './App.css'
 function App() {
   const [mostrarPanel, setMostrarPanel] = useState(false)
 
+  const cursos = [
+    {
+      id: 1,
+      nombre: 'Ecuaciones Diferenciales',
+      promedio: 'Sin notas',
+      pendientes: 5,
+      proximaActividad: 'EA1',
+    },
+  ]
+
   return (
     <main className="app">
       <header className="topbar">
@@ -56,6 +66,25 @@ function App() {
               <span>Completadas</span>
             </article>
           </div>
+
+          <section className="courses-section">
+            <h2>Mis cursos</h2>
+
+            <div className="course-list">
+              {cursos.map((curso) => (
+                <article className="course-card" key={curso.id}>
+                  <div>
+                    <h3>{curso.nombre}</h3>
+                    <p>Promedio: {curso.promedio}</p>
+                    <p>Pendientes: {curso.pendientes}</p>
+                    <p>Próxima actividad: {curso.proximaActividad}</p>
+                  </div>
+
+                  <button type="button">Abrir curso</button>
+                </article>
+              ))}
+            </div>
+          </section>
 
           <button
             type="button"

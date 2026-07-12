@@ -144,3 +144,55 @@
     grid-template-columns: 1fr;
   }
 }
+
+.courses-section {
+  margin-top: 40px;
+  text-align: left;
+}
+
+.courses-section h2 {
+  margin-bottom: 16px;
+  color: #111827;
+}
+
+.course-list {
+  display: grid;
+  gap: 16px;
+}
+
+.course-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+  background-color: white;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.course-card h3 {
+  margin: 0 0 10px;
+  color: #1557b0;
+}
+
+.course-card p {
+  margin: 5px 0;
+  color: #6b7280;
+}
+
+.course-card button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .course-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .course-card button {
+    width: 100%;
+  }
+}
