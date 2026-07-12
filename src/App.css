@@ -626,3 +626,134 @@
     width: 100%;
   }
 }
+
+.grades-panel {
+  margin-top: 24px;
+}
+
+.grades-heading {
+  margin-bottom: 26px;
+}
+
+.grades-heading p {
+  margin: 0 0 6px;
+  color: #1557b0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.grades-heading h2 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 30px;
+}
+
+.grades-heading span {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.final-grade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.final-grade-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px;
+  background-color: #f4f7fb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.final-grade-card span {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.final-grade-card strong {
+  color: #1557b0;
+  font-size: 30px;
+}
+
+.grade-tree {
+  display: grid;
+  gap: 16px;
+}
+
+.grade-group {
+  padding: 22px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.grade-group-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.grade-group-title h3 {
+  margin: 0 0 5px;
+  color: #111827;
+}
+
+.grade-group-title p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.grade-group-title > strong {
+  flex-shrink: 0;
+  color: #1557b0;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.subcomponents-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.subcomponents-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 11px 14px;
+  background-color: white;
+  border-radius: 8px;
+}
+
+.subcomponents-list span {
+  color: #374151;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .final-grade-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grade-group-title {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .grade-group-title h3 {
+    font-size: 19px;
+  }
+
+  .grade-group-title > strong {
+    font-size: 18px;
+  }
+}

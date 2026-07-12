@@ -404,7 +404,11 @@ useEffect(() => {
               Actividades
             </button>
 
-            <button type="button" disabled>
+            <button
+              type="button"
+              className={pestanaCurso === 'notas' ? 'active-tab' : ''}
+              onClick={() => setPestanaCurso('notas')}
+            >
               Notas
             </button>
 
@@ -485,10 +489,10 @@ useEffect(() => {
                 {mostrarFormulario && (
                 <form className="activity-form" onSubmit={agregarActividad}>
                   <h3>
-  {actividadEditandoId !== null
-    ? 'Editar actividad'
-    : 'Nueva actividad'}
-</h3>
+                    {actividadEditandoId !== null
+                      ? 'Editar actividad'
+                      : 'Nueva actividad'}
+                  </h3>
 
                   <div className="form-grid">
                     <label className="form-field">
@@ -559,10 +563,10 @@ useEffect(() => {
                     </button>
 
                     <button type="submit">
-  {actividadEditandoId !== null
-    ? 'Guardar cambios'
-    : 'Guardar actividad'}
-</button>
+                      {actividadEditandoId !== null
+                        ? 'Guardar cambios'
+                        : 'Guardar actividad'}
+                    </button>
                   </div>
                 </form>
               )}
@@ -571,8 +575,8 @@ useEffect(() => {
                 </div>
 
                 <button type="button" onClick={abrirFormularioNuevo}>
-  + Agregar actividad
-</button>
+                  + Agregar actividad
+                </button>
               </div>
 
               <div className="activities-list">
@@ -628,6 +632,124 @@ useEffect(() => {
               </div>
             </section>
           )}
+          {pestanaCurso === 'notas' && (
+  <section className="grades-panel">
+    <div className="grades-heading">
+      <p>Calculadora del curso</p>
+      <h2>Sistema de evaluación</h2>
+      <span>
+        Nota final = 20 % EP + 30 % EF + 25 % EC1 + 25 % EC2
+      </span>
+    </div>
+
+    <div className="final-grade-grid">
+      <article className="final-grade-card">
+        <span>Promedio actual</span>
+        <strong>—</strong>
+      </article>
+
+      <article className="final-grade-card">
+        <span>Porcentaje evaluado</span>
+        <strong>0 %</strong>
+      </article>
+
+      <article className="final-grade-card">
+        <span>Nota mínima</span>
+        <strong>10.5</strong>
+      </article>
+    </div>
+
+    <section className="grade-tree">
+      <article className="grade-group">
+        <div className="grade-group-title">
+          <div>
+            <h3>Examen parcial</h3>
+            <p>Nota directa sobre 20</p>
+          </div>
+
+          <strong>20 %</strong>
+        </div>
+      </article>
+
+      <article className="grade-group">
+        <div className="grade-group-title">
+          <div>
+            <h3>Evaluación continua 1</h3>
+            <p>Se redondea antes de calcular la nota final</p>
+          </div>
+
+          <strong>25 %</strong>
+        </div>
+
+        <div className="subcomponents-list">
+          <div>
+            <span>PEA123</span>
+            <strong>70 %</strong>
+          </div>
+
+          <div>
+            <span>PTA12</span>
+            <strong>10 %</strong>
+          </div>
+
+          <div>
+            <span>PRC12</span>
+            <strong>10 %</strong>
+          </div>
+
+          <div>
+            <span>P1</span>
+            <strong>10 %</strong>
+          </div>
+        </div>
+      </article>
+
+      <article className="grade-group">
+        <div className="grade-group-title">
+          <div>
+            <h3>Evaluación continua 2</h3>
+            <p>Se redondea antes de calcular la nota final</p>
+          </div>
+
+          <strong>25 %</strong>
+        </div>
+
+        <div className="subcomponents-list">
+          <div>
+            <span>PEA456</span>
+            <strong>60 %</strong>
+          </div>
+
+          <div>
+            <span>PTA34</span>
+            <strong>10 %</strong>
+          </div>
+
+          <div>
+            <span>PRC34</span>
+            <strong>10 %</strong>
+          </div>
+
+          <div>
+            <span>P2 + P3</span>
+            <strong>20 %</strong>
+          </div>
+        </div>
+      </article>
+
+      <article className="grade-group">
+        <div className="grade-group-title">
+          <div>
+            <h3>Examen final</h3>
+            <p>Nota directa sobre 20</p>
+          </div>
+
+          <strong>30 %</strong>
+        </div>
+      </article>
+    </section>
+  </section>
+)}
         </section>
       )}
     </main>
