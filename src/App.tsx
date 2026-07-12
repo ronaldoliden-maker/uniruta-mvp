@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './App.css'
 
 function App() {
-  const [mostrarPanel, setMostrarPanel] = useState(false)
+  const [vista, setVista] = useState('inicio')
 
   const cursos = [
     {
@@ -25,7 +25,7 @@ function App() {
         <span>Ciclo 2026-1</span>
       </header>
 
-      {!mostrarPanel ? (
+      {vista === 'inicio' && (
         <section className="welcome">
           <p>Panel principal</p>
 
@@ -36,11 +36,13 @@ function App() {
             lugar.
           </p>
 
-          <button type="button" onClick={() => setMostrarPanel(true)}>
+          <button type="button" onClick={() => setVista('panel')}>
             Comenzar
           </button>
         </section>
-      ) : (
+      )}
+
+      {vista === 'panel' && (
         <section className="welcome">
           <p>Semana actual</p>
 
@@ -80,7 +82,9 @@ function App() {
                     <p>Próxima actividad: {curso.proximaActividad}</p>
                   </div>
 
-                  <button type="button">Abrir curso</button>
+                  <button type="button" onClick={() => setVista('curso')}>
+                    Abrir curso
+                  </button>
                 </article>
               ))}
             </div>
@@ -89,10 +93,84 @@ function App() {
           <button
             type="button"
             className="secondary-button"
-            onClick={() => setMostrarPanel(false)}
+            onClick={() => setVista('inicio')}
           >
             Volver
           </button>
+        </section>
+      )}
+
+      {vista === 'curso' && (
+        <section className="course-detail">
+          <button
+            type="button"
+            className="back-button"
+            onClick={() => setVista('panel')}
+          >
+            ← Volver al panel
+          </button>
+
+          <div className="course-heading">
+            <p>Curso</p>
+            <h1>Ecuaciones Diferenciales</h1>
+            <span>En curso</span>
+          </div>
+
+          <nav className="course-tabs">
+            <button type="button" className="active-tab">
+              Resumen
+            </button>
+            <button type="button">Actividades</button>
+            <button type="button">Notas</button>
+            <button type="button">Calendario</button>
+          </nav>
+
+          <div className="course-summary-grid">
+            <article className="summary-card">
+              <strong>—</strong>
+              <span>Promedio actual</span>
+            </article>
+
+            <article className="summary-card">
+              <strong>0 %</strong>
+              <span>Ya evaluado</span>
+            </article>
+
+            <article className="summary-card">
+              <strong>5</strong>
+              <span>Pendientes</span>
+            </article>
+          </div>
+
+          <article className="next-activity">
+            <p>Próxima actividad</p>
+            <h2>EA1 — Evaluación en aula</h2>
+            <span>Semana 2 · Fecha exacta pendiente</span>
+          </article>
+
+          <section className="grade-components">
+            <h2>Componentes de la nota</h2>
+
+            <div className="grade-component">
+              <span>Examen parcial</span>
+              <strong>20 %</strong>
+            </div>
+
+            <div className="grade-component">
+              <span>Evaluación continua 1</span>
+              <strong>25 %</strong>
+            </div>
+
+            <div className="grade-component">
+              <span>Evaluación continua 2</span>
+              <strong>25 %</strong>
+            </div>
+
+            <div className="grade-component">
+              <span>Examen final</span>
+              <strong>30 %</strong>
+            </div>
+          </section>
         </section>
       )}
     </main>

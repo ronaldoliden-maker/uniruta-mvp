@@ -196,3 +196,158 @@
     width: 100%;
   }
 }
+
+.course-detail {
+  max-width: 1000px;
+  margin: 50px auto;
+  padding: 40px;
+  background-color: white;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(31, 41, 55, 0.08);
+}
+
+.back-button {
+  padding: 0;
+  color: #1557b0;
+  background-color: transparent;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.course-heading {
+  margin-top: 30px;
+}
+
+.course-heading p {
+  margin: 0 0 8px;
+  color: #1557b0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.course-heading h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 38px;
+}
+
+.course-heading span {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 7px 12px;
+  color: #166534;
+  background-color: #dcfce7;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.course-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 30px 0;
+  padding-bottom: 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.course-tabs button {
+  padding: 10px 16px;
+  color: #6b7280;
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.course-tabs .active-tab {
+  color: #1557b0;
+  background-color: #eaf2ff;
+}
+
+.course-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.next-activity {
+  margin-top: 30px;
+  padding: 24px;
+  background-color: #f4f7fb;
+  border-left: 5px solid #1557b0;
+  border-radius: 12px;
+}
+
+.next-activity p {
+  margin: 0 0 8px;
+  color: #1557b0;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.next-activity h2 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.next-activity span {
+  color: #6b7280;
+}
+
+.grade-components {
+  margin-top: 35px;
+}
+
+.grade-components h2 {
+  color: #111827;
+}
+
+.grade-component {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 12px;
+  padding: 18px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.grade-component span {
+  color: #374151;
+  font-weight: 600;
+}
+
+.grade-component strong {
+  color: #1557b0;
+}
+
+@media (max-width: 600px) {
+  .course-detail {
+    margin: 30px 16px;
+    padding: 28px 20px;
+  }
+
+  .course-heading h1 {
+    font-size: 30px;
+  }
+
+  .course-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .course-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    overflow-x: visible;
+  }
+
+  .course-tabs button {
+    width: 100%;
+  }
+}
