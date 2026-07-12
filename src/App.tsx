@@ -439,6 +439,7 @@ function App() {
       guardarNota('')
       return
     }
+
   
     const numero = Number(valor)
   
@@ -510,6 +511,39 @@ const notaFinalRedondeada = Math.round(notaFinalSinRedondear)
 
 const estadoFinal =
   notaFinalSinRedondear >= 10.5 ? 'Aprobado' : 'Por debajo de 10.5'
+
+  function obtenerPesoRegistrado(nota: string, peso: number) {
+    return nota !== '' ? peso : 0
+  }
+
+  const porcentajeEvaluado =
+  obtenerPesoRegistrado(notaEP, 20) +
+  obtenerPesoRegistrado(notaEF, 30) +
+
+  obtenerPesoRegistrado(notaEA1, 17.5 / 3) +
+  obtenerPesoRegistrado(notaEA2, 17.5 / 3) +
+  obtenerPesoRegistrado(notaEA3, 17.5 / 3) +
+
+  obtenerPesoRegistrado(notaTA1, 1.25) +
+  obtenerPesoRegistrado(notaTA2, 1.25) +
+
+  obtenerPesoRegistrado(notaRC1, 1.25) +
+  obtenerPesoRegistrado(notaRC2, 1.25) +
+
+  obtenerPesoRegistrado(notaP1, 2.5) +
+
+  obtenerPesoRegistrado(notaEA4, 5) +
+  obtenerPesoRegistrado(notaEA5, 5) +
+  obtenerPesoRegistrado(notaEA6, 5) +
+
+  obtenerPesoRegistrado(notaTA3, 1.25) +
+  obtenerPesoRegistrado(notaTA4, 1.25) +
+
+  obtenerPesoRegistrado(notaRC3, 1.25) +
+  obtenerPesoRegistrado(notaRC4, 1.25) +
+
+  obtenerPesoRegistrado(notaP2, 1.25) +
+  obtenerPesoRegistrado(notaP3, 3.75)
 
   return (
     <main className="app">
@@ -658,7 +692,7 @@ const estadoFinal =
                 </article>
 
                 <article className="summary-card">
-                  <strong>0 %</strong>
+                  <strong>{porcentajeEvaluado.toFixed(2)} %</strong>
                   <span>Ya evaluado</span>
                 </article>
 
@@ -901,6 +935,11 @@ const estadoFinal =
               <article className="final-grade-card">
                 <span>Nota final redondeada</span>
                 <strong>{notaFinalRedondeada}</strong>
+              </article>
+
+              <article className="final-grade-card">
+                <span>Porcentaje evaluado</span>
+                <strong>{porcentajeEvaluado.toFixed(2)} %</strong>
               </article>
 
               <article className="final-grade-card">
