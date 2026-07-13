@@ -1,6 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
+import { configuracionEDO } from './data/edoConfig'
+import {
+  calcularComponente,
+  calcularNotaFinal,
+  type NotasPorId,
+} from './utils/calcularNotas'
+
 type Actividad = {
   id: number
   nombre: string
@@ -598,15 +605,77 @@ const estadoFinal =
   obtenerAporte(notaP2, 5, 1.25) +
   obtenerAporte(notaP3, 15, 3.75)
 
-const porcentajePendiente = 100 - porcentajeEvaluado
+  const porcentajePendiente = 100 - porcentajeEvaluado
 
-const metaNumerica = Number(metaNota || 0)
+  const metaNumerica = Number(metaNota || 0)
 
-const promedioNecesario =
-  porcentajePendiente > 0
-    ? (metaNumerica - puntosAcumulados) /
-      (porcentajePendiente / 100)
-    : null
+  const promedioNecesario =
+    porcentajePendiente > 0
+      ? (metaNumerica - puntosAcumulados) /
+        (porcentajePendiente / 100)
+      : null
+
+  const notasDinamicas: NotasPorId = {
+  ep: notaEP,
+  ef: notaEF,
+
+  ea1: notaEA1,
+  ea2: notaEA2,
+  ea3: notaEA3,
+
+  ta1: notaTA1,
+  ta2: notaTA2,
+
+  rc1: notaRC1,
+  rc2: notaRC2,
+
+  p1: notaP1,
+
+  ea4: notaEA4,
+  ea5: notaEA5,
+  ea6: notaEA6,
+
+  ta3: notaTA3,
+  ta4: notaTA4,
+
+  rc3: notaRC3,
+  rc4: notaRC4,
+
+  p2: notaP2,
+  p3: notaP3,
+}  
+
+const componenteEC1 = configuracionEDO.componentes.find(
+  (componente) => componente.id === 'ec1',
+)
+
+const componenteEC2 = configuracionEDO.componentes.find(
+  (componente) => componente.id === 'ec2',
+)
+
+const ec1Dinamica = componenteEC1
+  ? calcularComponente(componenteEC1, notasDinamicas)
+  : 0
+
+const ec2Dinamica = componenteEC2
+  ? calcularComponente(componenteEC2, notasDinamicas)
+  : 0
+
+const notaFinalDinamica = calcularNotaFinal(
+  configuracionEDO.componentes,
+  notasDinamicas,
+  configuracionEDO.notaMaxima,
+)
+
+const coincidenEC1 = ec1Dinamica === ec1
+
+const coincidenEC2 = ec2Dinamica === ec2
+
+const coincideNotaFinal =
+  Math.abs(notaFinalDinamica - notaFinalSinRedondear) < 0.0001
+
+const motorCoincide =
+  coincidenEC1 && coincidenEC2 && coincideNotaFinal
 
   return (
     <main className="app">
@@ -1075,6 +1144,63 @@ const promedioNecesario =
                 modificar ligeramente el resultado final.
               </small>
             </section>
+
+            <section className="engine-check">
+  <div className="engine-check-heading">
+    <div>
+      <p>Motor general</p>
+      <h3>Comprobación de cálculos</h3>
+    </div>
+
+    <span
+      className={
+        motorCoincide
+          ? 'engine-status engine-success'
+          : 'engine-status engine-error'
+      }
+    >
+      {motorCoincide ? 'Los cálculos coinciden' : 'Revisar cálculos'}
+    </span>
+  </div>
+
+  <div className="engine-results">
+    <article>
+      <span>EC1 manual</span>
+      <strong>{ec1}</strong>
+    </article>
+
+    <article>
+      <span>EC1 dinámica</span>
+      <strong>{ec1Dinamica}</strong>
+    </article>
+
+    <article>
+      <span>EC2 manual</span>
+      <strong>{ec2}</strong>
+    </article>
+
+    <article>
+      <span>EC2 dinámica</span>
+      <strong>{ec2Dinamica}</strong>
+    </article>
+
+    <article>
+      <span>Nota final manual</span>
+      <strong>{notaFinalSinRedondear.toFixed(2)}</strong>
+    </article>
+
+    <article>
+      <span>Nota final dinámica</span>
+      <strong>{notaFinalDinamica.toFixed(2)}</strong>
+    </article>
+  </div>
+
+  <small>
+    El cálculo dinámico está leyendo la estructura guardada en
+    edoConfig.ts.
+  </small>
+</section>
+
 
               <section className="grade-tree">
               <article className="grade-group">
