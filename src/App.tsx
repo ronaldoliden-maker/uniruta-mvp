@@ -5,6 +5,7 @@ import { configuracionEDO } from './data/edoConfig'
 import {
   calcularComponente,
   calcularNotaFinal,
+  obtenerEvaluacionesDirectas,
   type NotasPorId,
 } from './utils/calcularNotas'
 
@@ -677,6 +678,11 @@ const coincideNotaFinal =
 const motorCoincide =
   coincidenEC1 && coincidenEC2 && coincideNotaFinal
 
+  const evaluacionesDinamicas =
+  obtenerEvaluacionesDirectas(
+    configuracionEDO.componentes,
+  )  
+
   return (
     <main className="app">
       <header className="topbar">
@@ -1197,6 +1203,37 @@ const motorCoincide =
 
   <small>
     El cálculo dinámico está leyendo la estructura guardada en
+    edoConfig.ts.
+  </small>
+</section>
+
+<section className="dynamic-evaluations-check">
+  <div className="dynamic-evaluations-heading">
+    <div>
+      <p>Interfaz dinámica</p>
+      <h3>Evaluaciones detectadas</h3>
+    </div>
+
+    <strong>
+      {evaluacionesDinamicas.length} evaluaciones
+    </strong>
+  </div>
+
+  <div className="dynamic-evaluations-list">
+    {evaluacionesDinamicas.map((evaluacion) => (
+      <article key={evaluacion.id}>
+        <div>
+          <strong>{evaluacion.nombre}</strong>
+          <span>ID: {evaluacion.id}</span>
+        </div>
+
+        <span>Máximo: {evaluacion.notaMaxima}</span>
+      </article>
+    ))}
+  </div>
+
+  <small>
+    Esta lista fue generada automáticamente leyendo
     edoConfig.ts.
   </small>
 </section>

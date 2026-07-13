@@ -8,7 +8,15 @@ import type {
     number | string | undefined
   >
   
-  function convertirANumero(valor: number | string | undefined) {
+  export type EvaluacionDirecta = {
+    id: string
+    nombre: string
+    notaMaxima: number
+  }
+  
+  function convertirANumero(
+    valor: number | string | undefined,
+  ) {
     if (valor === undefined || valor === '') {
       return 0
     }
@@ -18,8 +26,15 @@ import type {
     return Number.isFinite(numero) ? numero : 0
   }
   
-  function limitar(valor: number, minimo: number, maximo: number) {
-    return Math.min(Math.max(valor, minimo), maximo)
+  function limitar(
+    valor: number,
+    minimo: number,
+    maximo: number,
+  ) {
+    return Math.min(
+      Math.max(valor, minimo),
+      maximo,
+    )
   }
   
   function aplicarRedondeo(
@@ -41,8 +56,15 @@ import type {
     const hijos = componente.hijos ?? []
   
     if (componente.tipo === 'nota_directa') {
-      const notaIngresada = convertirANumero(notas[componente.id])
-      const notaLimitada = limitar(notaIngresada, 0, notaMaxima)
+      const notaIngresada = convertirANumero(
+        notas[componente.id],
+      )
+  
+      const notaLimitada = limitar(
+        notaIngresada,
+        0,
+        notaMaxima,
+      )
   
       return aplicarRedondeo(
         notaLimitada,
@@ -55,59 +77,105 @@ import type {
         return 0
       }
   
-      const sumaNormalizada = hijos.reduce((suma, hijo) => {
-        const valorHijo = calcularComponente(hijo, notas)
-        const maximoHijo = hijo.notaMaxima ?? notaMaxima
+      const sumaNormalizada = hijos.reduce(
+        (suma, hijo) => {
+          const valorHijo = calcularComponente(
+            hijo,
+            notas,
+          )
   
-        if (maximoHijo === 0) {
-          return suma
-        }
+          const maximoHijo =
+            hijo.notaMaxima ?? notaMaxima
   
-        const valorNormalizado =
-          (valorHijo / maximoHijo) * notaMaxima
+          if (maximoHijo === 0) {
+            return suma
+          }
   
-        return suma + valorNormalizado
-      }, 0)
+          const valorNormalizado =
+            (valorHijo / maximoHijo) *
+            notaMaxima
   
-      const promedio = sumaNormalizada / hijos.length
+          return suma + valorNormalizado
+        },
+        0,
+      )
+  
+      const promedio =
+        sumaNormalizada / hijos.length
+  
+      const promedioLimitado = limitar(
+        promedio,
+        0,
+        notaMaxima,
+      )
   
       return aplicarRedondeo(
-        limitar(promedio, 0, notaMaxima),
+        promedioLimitado,
         componente.redondeo,
       )
     }
   
     if (componente.tipo === 'suma') {
       const suma = hijos.reduce(
-        (total, hijo) =>
-          total + calcularComponente(hijo, notas),
+        (total, hijo) => {
+          return (
+            total +
+            calcularComponente(hijo, notas)
+          )
+        },
         0,
       )
   
+      const sumaLimitada = limitar(
+        suma,
+        0,
+        notaMaxima,
+      )
+  
       return aplicarRedondeo(
-        limitar(suma, 0, notaMaxima),
+        sumaLimitada,
         componente.redondeo,
       )
     }
   
     if (componente.tipo === 'ponderado') {
-      const resultado = hijos.reduce((total, hijo) => {
-        const valorHijo = calcularComponente(hijo, notas)
-        const maximoHijo = hijo.notaMaxima ?? notaMaxima
-        const pesoHijo = hijo.peso ?? 0
+      const resultado = hijos.reduce(
+        (total, hijo) => {
+          const valorHijo = calcularComponente(
+            hijo,
+            notas,
+          )
   
-        if (maximoHijo === 0) {
-          return total
-        }
+          const maximoHijo =
+            hijo.notaMaxima ?? notaMaxima
   
-        const valorNormalizado =
-          (valorHijo / maximoHijo) * notaMaxima
+          const pesoHijo = hijo.peso ?? 0
   
-        return total + valorNormalizado * (pesoHijo / 100)
-      }, 0)
+          if (maximoHijo === 0) {
+            return total
+          }
+  
+          const valorNormalizado =
+            (valorHijo / maximoHijo) *
+            notaMaxima
+  
+          const aporte =
+            valorNormalizado *
+            (pesoHijo / 100)
+  
+          return total + aporte
+        },
+        0,
+      )
+  
+      const resultadoLimitado = limitar(
+        resultado,
+        0,
+        notaMaxima,
+      )
   
       return aplicarRedondeo(
-        limitar(resultado, 0, notaMaxima),
+        resultadoLimitado,
         componente.redondeo,
       )
     }
@@ -120,21 +188,65 @@ import type {
     notas: NotasPorId,
     notaMaximaFinal = 20,
   ) {
-    const resultado = componentes.reduce((total, componente) => {
-      const peso = componente.peso ?? 0
-      const valor = calcularComponente(componente, notas)
-      const maximoComponente =
-        componente.notaMaxima ?? notaMaximaFinal
+    const resultado = componentes.reduce(
+      (total, componente) => {
+        const peso = componente.peso ?? 0
   
-      if (maximoComponente === 0) {
-        return total
-      }
+        const valor = calcularComponente(
+          componente,
+          notas,
+        )
   
-      const valorNormalizado =
-        (valor / maximoComponente) * notaMaximaFinal
+        const maximoComponente =
+          componente.notaMaxima ??
+          notaMaximaFinal
   
-      return total + valorNormalizado * (peso / 100)
-    }, 0)
+        if (maximoComponente === 0) {
+          return total
+        }
   
-    return limitar(resultado, 0, notaMaximaFinal)
+        const valorNormalizado =
+          (valor / maximoComponente) *
+          notaMaximaFinal
+  
+        const aporte =
+          valorNormalizado *
+          (peso / 100)
+  
+        return total + aporte
+      },
+      0,
+    )
+  
+    return limitar(
+      resultado,
+      0,
+      notaMaximaFinal,
+    )
+  }
+  
+  export function obtenerEvaluacionesDirectas(
+    componentes: ComponenteNota[],
+  ): EvaluacionDirecta[] {
+    return componentes.flatMap(
+      (componente) => {
+        if (
+          componente.tipo ===
+          'nota_directa'
+        ) {
+          return [
+            {
+              id: componente.id,
+              nombre: componente.nombre,
+              notaMaxima:
+                componente.notaMaxima ?? 20,
+            },
+          ]
+        }
+  
+        return obtenerEvaluacionesDirectas(
+          componente.hijos ?? [],
+        )
+      },
+    )
   }
