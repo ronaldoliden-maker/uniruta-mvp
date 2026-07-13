@@ -3,7 +3,6 @@ import './App.css'
 
 import { configuracionEDO } from './data/edoConfig'
 import {
-  calcularComponente,
   calcularNotaFinal,
   obtenerEvaluacionesDirectas,
   type NotasPorId,
@@ -17,6 +16,12 @@ type Actividad = {
   fecha: string
   estado: 'No iniciada' | 'Completada'
 }
+
+type ModoNotas = 'oficial' | 'simulacion'
+
+const CLAVE_ACTIVIDADES = 'uniruta-actividades'
+const CLAVE_NOTAS_OFICIALES = 'uniruta-notas-automaticas'
+const CLAVE_META = 'uniruta-meta-nota'
 
 const actividadesIniciales: Actividad[] = [
   {
@@ -93,10 +98,88 @@ const actividadesIniciales: Actividad[] = [
   },
 ]
 
+// La configuración decide qué evaluaciones existen y cuál es su nota máxima.
+const evaluacionesDinamicas = obtenerEvaluacionesDirectas(
+  configuracionEDO.componentes,
+)
+
+// Peso real de cada evaluación dentro de la nota final del curso.
+// Se usa para calcular cuánto del curso ya fue evaluado y la proyección.
+const pesosEvaluaciones: Record<string, number> = {
+  ep: 20,
+  ef: 30,
+
+  ea1: 17.5 / 3,
+  ea2: 17.5 / 3,
+  ea3: 17.5 / 3,
+
+  ta1: 1.25,
+  ta2: 1.25,
+
+  rc1: 1.25,
+  rc2: 1.25,
+
+  p1: 2.5,
+
+  ea4: 5,
+  ea5: 5,
+  ea6: 5,
+
+  ta3: 1.25,
+  ta4: 1.25,
+
+  rc3: 1.25,
+  rc4: 1.25,
+
+  p2: 1.25,
+  p3: 3.75,
+}
+
+function tieneNota(valor: number | string | undefined) {
+  return valor !== '' && valor !== undefined
+}
+
+function crearNotasIniciales(): NotasPorId {
+  const notasVacias: NotasPorId = {}
+
+  evaluacionesDinamicas.forEach((evaluacion) => {
+    notasVacias[evaluacion.id] = ''
+  })
+
+  const notasGuardadas = localStorage.getItem(CLAVE_NOTAS_OFICIALES)
+
+  if (notasGuardadas) {
+    try {
+      const notasParseadas = JSON.parse(notasGuardadas) as NotasPorId
+
+      return {
+        ...notasVacias,
+        ...notasParseadas,
+      }
+    } catch {
+      localStorage.removeItem(CLAVE_NOTAS_OFICIALES)
+    }
+  }
+
+  // Compatibilidad con las notas que se guardaron antes en claves individuales.
+  evaluacionesDinamicas.forEach((evaluacion) => {
+    notasVacias[evaluacion.id] =
+      localStorage.getItem(`uniruta-nota-${evaluacion.id}`) ?? ''
+  })
+
+  return notasVacias
+}
+
 function App() {
+  // ------------------------------------------------------------
+  // 1. Navegación
+  // ------------------------------------------------------------
   const [vista, setVista] = useState('inicio')
   const [pestanaCurso, setPestanaCurso] = useState('resumen')
 
+  // ------------------------------------------------------------
+  // 2. Actividades
+  // ------------------------------------------------------------
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [nombreActividad, setNombreActividad] = useState('')
   const [tipoActividad, setTipoActividad] = useState('Tarea')
@@ -106,194 +189,60 @@ function App() {
     null,
   )
 
-  const [notaEA1, setNotaEA1] = useState(
-    () => localStorage.getItem('uniruta-nota-ea1') ?? '',
-  )
-  
-  const [notaEA2, setNotaEA2] = useState(
-    () => localStorage.getItem('uniruta-nota-ea2') ?? '',
-  )
-  
-  const [notaEA3, setNotaEA3] = useState(
-    () => localStorage.getItem('uniruta-nota-ea3') ?? '',
-  )
-
-  const [notaTA1, setNotaTA1] = useState(
-    () => localStorage.getItem('uniruta-nota-ta1') ?? '',
-  )
-  
-  const [notaTA2, setNotaTA2] = useState(
-    () => localStorage.getItem('uniruta-nota-ta2') ?? '',
-  )
-
-
-  const [notaRC1, setNotaRC1] = useState(
-    () => localStorage.getItem('uniruta-nota-rc1') ?? '',
-  )
-  
-  const [notaRC2, setNotaRC2] = useState(
-    () => localStorage.getItem('uniruta-nota-rc2') ?? '',
-  )
-  
-  const [notaP1, setNotaP1] = useState(
-    () => localStorage.getItem('uniruta-nota-p1') ?? '',
-  )
-
-  const [notaEA4, setNotaEA4] = useState(
-    () => localStorage.getItem('uniruta-nota-ea4') ?? '',
-  )
-  
-  const [notaEA5, setNotaEA5] = useState(
-    () => localStorage.getItem('uniruta-nota-ea5') ?? '',
-  )
-  
-  const [notaEA6, setNotaEA6] = useState(
-    () => localStorage.getItem('uniruta-nota-ea6') ?? '',
-  )
-
-
-  const [notaTA3, setNotaTA3] = useState(
-    () => localStorage.getItem('uniruta-nota-ta3') ?? '',
-  )
-  
-  const [notaTA4, setNotaTA4] = useState(
-    () => localStorage.getItem('uniruta-nota-ta4') ?? '',
-  )
-
-  const [notaRC3, setNotaRC3] = useState(
-    () => localStorage.getItem('uniruta-nota-rc3') ?? '',
-  )
-  
-  const [notaRC4, setNotaRC4] = useState(
-    () => localStorage.getItem('uniruta-nota-rc4') ?? '',
-  )
-
-  const [notaP2, setNotaP2] = useState(
-    () => localStorage.getItem('uniruta-nota-p2') ?? '',
-  )
-  
-  const [notaP3, setNotaP3] = useState(
-    () => localStorage.getItem('uniruta-nota-p3') ?? '',
-  )
-
-  const [notaEP, setNotaEP] = useState(
-    () => localStorage.getItem('uniruta-nota-ep') ?? '',
-  )
-  
-  const [notaEF, setNotaEF] = useState(
-    () => localStorage.getItem('uniruta-nota-ef') ?? '',
-  )
-
-  const [metaNota, setMetaNota] = useState(
-    () => localStorage.getItem('uniruta-meta-nota') ?? '10.5',
-  )
-
-  const [notasAutomaticas, setNotasAutomaticas] =
-  useState<NotasPorId>(() => {
-    const notasGuardadas = localStorage.getItem(
-      'uniruta-notas-automaticas',
-    )
-
-    if (notasGuardadas) {
-      try {
-        return JSON.parse(notasGuardadas) as NotasPorId
-      } catch {
-        localStorage.removeItem(
-          'uniruta-notas-automaticas',
-        )
-      }
-    }
-
-    const notasIniciales: NotasPorId = {}
-
-    obtenerEvaluacionesDirectas(
-      configuracionEDO.componentes,
-    ).forEach((evaluacion) => {
-      notasIniciales[evaluacion.id] =
-        localStorage.getItem(
-          `uniruta-nota-${evaluacion.id}`,
-        ) ?? ''
-    })
-
-    return notasIniciales
-  })
-
   const [actividades, setActividades] = useState<Actividad[]>(() => {
-    const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
+    const actividadesGuardadas = localStorage.getItem(CLAVE_ACTIVIDADES)
 
     if (actividadesGuardadas) {
       try {
         return JSON.parse(actividadesGuardadas) as Actividad[]
       } catch {
-        localStorage.removeItem('uniruta-actividades')
+        localStorage.removeItem(CLAVE_ACTIVIDADES)
       }
     }
 
     return actividadesIniciales
   })
 
+  // ------------------------------------------------------------
+  // 3. Notas oficiales y simulación
+  // ------------------------------------------------------------
+  const [notasOficiales, setNotasOficiales] =
+    useState<NotasPorId>(crearNotasIniciales)
+
+  const [modoNotas, setModoNotas] = useState<ModoNotas>('oficial')
+
+  // Las notas simuladas viven solo en memoria: no se guardan en localStorage.
+  const [notasSimuladas, setNotasSimuladas] =
+    useState<NotasPorId>({})
+
+  const [metaNota, setMetaNota] = useState(
+    () => localStorage.getItem(CLAVE_META) ?? '10.5',
+  )
+
+  // ------------------------------------------------------------
+  // 4. Persistencia
+  // ------------------------------------------------------------
   useEffect(() => {
     localStorage.setItem(
-      'uniruta-actividades',
+      CLAVE_ACTIVIDADES,
       JSON.stringify(actividades),
     )
   }, [actividades])
 
   useEffect(() => {
-    localStorage.setItem('uniruta-nota-ea1', notaEA1)
-    localStorage.setItem('uniruta-nota-ea2', notaEA2)
-    localStorage.setItem('uniruta-nota-ea3', notaEA3)
-  }, [notaEA1, notaEA2, notaEA3])
+    localStorage.setItem(
+      CLAVE_NOTAS_OFICIALES,
+      JSON.stringify(notasOficiales),
+    )
+  }, [notasOficiales])
 
   useEffect(() => {
-    localStorage.setItem('uniruta-nota-ta1', notaTA1)
-    localStorage.setItem('uniruta-nota-ta2', notaTA2)
-  }, [notaTA1, notaTA2])
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-nota-rc1', notaRC1)
-    localStorage.setItem('uniruta-nota-rc2', notaRC2)
-    localStorage.setItem('uniruta-nota-p1', notaP1)
-  }, [notaRC1, notaRC2, notaP1])
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-nota-ea4', notaEA4)
-    localStorage.setItem('uniruta-nota-ea5', notaEA5)
-    localStorage.setItem('uniruta-nota-ea6', notaEA6)
-  }, [notaEA4, notaEA5, notaEA6])
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-nota-ta3', notaTA3)
-    localStorage.setItem('uniruta-nota-ta4', notaTA4)
-  }, [notaTA3, notaTA4])
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-nota-rc3', notaRC3)
-    localStorage.setItem('uniruta-nota-rc4', notaRC4)
-  }, [notaRC3, notaRC4])
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-nota-p2', notaP2)
-    localStorage.setItem('uniruta-nota-p3', notaP3)
-  }, [notaP2, notaP3])
-
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-nota-ep', notaEP)
-    localStorage.setItem('uniruta-nota-ef', notaEF)
-  }, [notaEP, notaEF])
-
-  useEffect(() => {
-    localStorage.setItem('uniruta-meta-nota', metaNota)
+    localStorage.setItem(CLAVE_META, metaNota)
   }, [metaNota])
 
-  useEffect(() => {
-    localStorage.setItem(
-      'uniruta-notas-automaticas',
-      JSON.stringify(notasAutomaticas),
-    )
-  }, [notasAutomaticas])
-
+  // ------------------------------------------------------------
+  // 5. Cálculos de actividades
+  // ------------------------------------------------------------
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
   ).length
@@ -318,21 +267,12 @@ function App() {
     (actividad) => actividad.estado !== 'Completada',
   )
 
-  const cursos = [
-    {
-      id: 1,
-      nombre: 'Ecuaciones Diferenciales',
-      promedio: 'Sin notas',
-      pendientes,
-      proximaActividad: proximaActividad
-        ? proximaActividad.nombre
-        : 'Sin actividades pendientes',
-    },
-  ]
-
+  // ------------------------------------------------------------
+  // 6. Funciones de actividades
+  // ------------------------------------------------------------
   function alternarEstadoActividad(id: number) {
-    setActividades(
-      actividades.map((actividad) =>
+    setActividades((actividadesActuales) =>
+      actividadesActuales.map((actividad) =>
         actividad.id === id
           ? {
               ...actividad,
@@ -363,8 +303,8 @@ function App() {
       return
     }
 
-    setActividades(
-      actividades.filter((actividad) => actividad.id !== id),
+    setActividades((actividadesActuales) =>
+      actividadesActuales.filter((actividad) => actividad.id !== id),
     )
   }
 
@@ -398,11 +338,7 @@ function App() {
   }
 
   function abrirFormularioNuevo() {
-    setNombreActividad('')
-    setTipoActividad('Tarea')
-    setSemanaActividad('')
-    setFechaActividad('')
-    setActividadEditandoId(null)
+    limpiarFormulario()
     setMostrarFormulario(true)
   }
 
@@ -444,8 +380,8 @@ function App() {
     }
 
     if (actividadEditandoId !== null) {
-      setActividades(
-        actividades.map((actividad) =>
+      setActividades((actividadesActuales) =>
+        actividadesActuales.map((actividad) =>
           actividad.id === actividadEditandoId
             ? {
                 ...actividad,
@@ -461,217 +397,154 @@ function App() {
         estado: 'No iniciada',
       }
 
-      setActividades([...actividades, nuevaActividad])
+      setActividades((actividadesActuales) => [
+        ...actividadesActuales,
+        nuevaActividad,
+      ])
     }
 
     limpiarFormulario()
   }
 
+  // ------------------------------------------------------------
+  // 7. Funciones de notas
+  // ------------------------------------------------------------
+  function actualizarMeta(valor: string) {
+    if (valor === '') {
+      setMetaNota('')
+      return
+    }
+
+    const numero = Number(valor)
+
+    if (Number.isFinite(numero) && numero >= 0 && numero <= 20) {
+      setMetaNota(valor)
+    }
+  }
+
   function actualizarNota(
-    valor: string,
-    guardarNota: (nuevoValor: string) => void,
-  ) {
-    if (valor === '') {
-      guardarNota('')
-      return
-    }
-
-    const numero = Number(valor)
-
-    if (numero >= 0 && numero <= 20) {
-      guardarNota(valor)
-    }
-  }
-
-  function actualizarNotaConMaximo(
-    valor: string,
-    maximo: number,
-    guardarNota: (nuevoValor: string) => void,
-  ) {
-    if (valor === '') {
-      guardarNota('')
-      return
-    }
-
-  
-    const numero = Number(valor)
-  
-    if (numero >= 0 && numero <= maximo) {
-      guardarNota(valor)
-    }
-  }
-
-  function actualizarNotaAutomatica(
     id: string,
     valor: string,
     notaMaxima: number,
   ) {
-    if (valor === '') {
-      setNotasAutomaticas((notasActuales) => ({
-        ...notasActuales,
-        [id]: '',
-      }))
-  
+    const valorOficial = notasOficiales[id]
+    const campoTieneNotaOficial = tieneNota(valorOficial)
+
+    // En simulación, las notas oficiales quedan bloqueadas.
+    if (modoNotas === 'simulacion' && campoTieneNotaOficial) {
       return
     }
-  
-    const numero = Number(valor)
-  
-    if (
-      Number.isFinite(numero) &&
-      numero >= 0 &&
-      numero <= notaMaxima
-    ) {
-      setNotasAutomaticas((notasActuales) => ({
+
+    if (valor !== '') {
+      const numero = Number(valor)
+
+      if (
+        !Number.isFinite(numero) ||
+        numero < 0 ||
+        numero > notaMaxima
+      ) {
+        return
+      }
+    }
+
+    if (modoNotas === 'simulacion') {
+      setNotasSimuladas((notasActuales) => ({
         ...notasActuales,
         [id]: valor,
       }))
+
+      return
     }
+
+    setNotasOficiales((notasActuales) => ({
+      ...notasActuales,
+      [id]: valor,
+    }))
   }
 
-  const pea123 =
-  (Number(notaEA1 || 0) +
-    Number(notaEA2 || 0) +
-    Number(notaEA3 || 0)) /
-  3
-
-
-  const pta12 =
-  (Number(notaTA1 || 0) + Number(notaTA2 || 0)) / 2
-
-  const prc12 =
-  (Number(notaRC1 || 0) + Number(notaRC2 || 0)) / 2
-
-const p1 = Number(notaP1 || 0)
-
-const ec1SinRedondear =
-  pea123 * 0.7 +
-  pta12 * 0.1 +
-  prc12 * 0.1 +
-  p1 * 0.1
-
-  const ec1 = Math.round(ec1SinRedondear)
-
-  const pea456 =
-    (Number(notaEA4 || 0) +
-      Number(notaEA5 || 0) +
-      Number(notaEA6 || 0)) /
-    3
-
-    const pta34 =
-  (Number(notaTA3 || 0) + Number(notaTA4 || 0)) / 2
-
-  const prc34 =
-  (Number(notaRC3 || 0) + Number(notaRC4 || 0)) / 2
-  
-
-  const p2 = Number(notaP2 || 0)
-  const p3 = Number(notaP3 || 0)
-  
-  const proyecto2 = p2 + p3
-  
-  const ec2SinRedondear =
-    pea456 * 0.6 +
-    pta34 * 0.1 +
-    prc34 * 0.1 +
-    proyecto2 * 0.2
-  
-  const ec2 = Math.round(ec2SinRedondear)
-
-
-  const ep = Number(notaEP || 0)
-const ef = Number(notaEF || 0)
-
-const notaFinalSinRedondear =
-  ep * 0.2 +
-  ef * 0.3 +
-  ec1 * 0.25 +
-  ec2 * 0.25
-
-const notaFinalRedondeada = Math.round(notaFinalSinRedondear)
-
-const estadoFinal =
-  notaFinalSinRedondear >= 10.5 ? 'Aprobado' : 'Por debajo de 10.5'
-
-  function obtenerPesoRegistrado(nota: string, peso: number) {
-    return nota !== '' ? peso : 0
+  function activarModoOficial() {
+    setModoNotas('oficial')
   }
 
-  function obtenerAporte(
-    nota: string,
-    notaMaxima: number,
-    peso: number,
-  ) {
-    if (nota === '') {
-      return 0
-    }
-  
-    return (
-      (Number(nota) / notaMaxima) *
-      20 *
-      (peso / 100)
-    )
+  function activarModoSimulacion() {
+    // Cada simulación empieza como una copia de las notas oficiales.
+    setNotasSimuladas({
+      ...notasOficiales,
+    })
+    setModoNotas('simulacion')
   }
 
-  const porcentajeEvaluado =
-  obtenerPesoRegistrado(notaEP, 20) +
-  obtenerPesoRegistrado(notaEF, 30) +
+  function restablecerSimulacion() {
+    setNotasSimuladas({
+      ...notasOficiales,
+    })
+  }
 
-  obtenerPesoRegistrado(notaEA1, 17.5 / 3) +
-  obtenerPesoRegistrado(notaEA2, 17.5 / 3) +
-  obtenerPesoRegistrado(notaEA3, 17.5 / 3) +
+  // ------------------------------------------------------------
+  // 8. Cálculos académicos
+  // ------------------------------------------------------------
+  const notasEnFormulario =
+    modoNotas === 'simulacion'
+      ? notasSimuladas
+      : notasOficiales
 
-  obtenerPesoRegistrado(notaTA1, 1.25) +
-  obtenerPesoRegistrado(notaTA2, 1.25) +
+  const notaFinalOficial = calcularNotaFinal(
+    configuracionEDO.componentes,
+    notasOficiales,
+    configuracionEDO.notaMaxima,
+  )
 
-  obtenerPesoRegistrado(notaRC1, 1.25) +
-  obtenerPesoRegistrado(notaRC2, 1.25) +
+  const notaFinalMostrada = calcularNotaFinal(
+    configuracionEDO.componentes,
+    notasEnFormulario,
+    configuracionEDO.notaMaxima,
+  )
 
-  obtenerPesoRegistrado(notaP1, 2.5) +
+  const notaFinalRedondeada = Math.round(notaFinalMostrada)
+  const diferenciaSimulada =
+    notaFinalMostrada - notaFinalOficial
 
-  obtenerPesoRegistrado(notaEA4, 5) +
-  obtenerPesoRegistrado(notaEA5, 5) +
-  obtenerPesoRegistrado(notaEA6, 5) +
+  const porcentajeEvaluado = evaluacionesDinamicas.reduce(
+    (total, evaluacion) => {
+      if (!tieneNota(notasOficiales[evaluacion.id])) {
+        return total
+      }
 
-  obtenerPesoRegistrado(notaTA3, 1.25) +
-  obtenerPesoRegistrado(notaTA4, 1.25) +
+      return total + (pesosEvaluaciones[evaluacion.id] ?? 0)
+    },
+    0,
+  )
 
-  obtenerPesoRegistrado(notaRC3, 1.25) +
-  obtenerPesoRegistrado(notaRC4, 1.25) +
+  const puntosAcumulados = evaluacionesDinamicas.reduce(
+    (total, evaluacion) => {
+      const valor = notasOficiales[evaluacion.id]
 
-  obtenerPesoRegistrado(notaP2, 1.25) +
-  obtenerPesoRegistrado(notaP3, 3.75)
+      if (!tieneNota(valor)) {
+        return total
+      }
 
-  const puntosAcumulados =
-  obtenerAporte(notaEP, 20, 20) +
-  obtenerAporte(notaEF, 20, 30) +
+      const nota = Number(valor)
+      const peso = pesosEvaluaciones[evaluacion.id] ?? 0
 
-  obtenerAporte(notaEA1, 20, 17.5 / 3) +
-  obtenerAporte(notaEA2, 20, 17.5 / 3) +
-  obtenerAporte(notaEA3, 20, 17.5 / 3) +
+      const aporte =
+        (nota / evaluacion.notaMaxima) *
+        20 *
+        (peso / 100)
 
-  obtenerAporte(notaTA1, 20, 1.25) +
-  obtenerAporte(notaTA2, 20, 1.25) +
+      return total + aporte
+    },
+    0,
+  )
 
-  obtenerAporte(notaRC1, 20, 1.25) +
-  obtenerAporte(notaRC2, 20, 1.25) +
+  const porcentajePendiente = Math.max(
+    0,
+    100 - porcentajeEvaluado,
+  )
 
-  obtenerAporte(notaP1, 20, 2.5) +
-
-  obtenerAporte(notaEA4, 20, 5) +
-  obtenerAporte(notaEA5, 20, 5) +
-  obtenerAporte(notaEA6, 20, 5) +
-
-  obtenerAporte(notaTA3, 20, 1.25) +
-  obtenerAporte(notaTA4, 20, 1.25) +
-
-  obtenerAporte(notaRC3, 20, 1.25) +
-  obtenerAporte(notaRC4, 20, 1.25) +
-
-  obtenerAporte(notaP2, 5, 1.25) +
-  obtenerAporte(notaP3, 15, 3.75)
-
-  const porcentajePendiente = 100 - porcentajeEvaluado
+  const promedioActual =
+    porcentajeEvaluado > 0
+      ? puntosAcumulados / (porcentajeEvaluado / 100)
+      : null
 
   const metaNumerica = Number(metaNota || 0)
 
@@ -681,78 +554,33 @@ const estadoFinal =
         (porcentajePendiente / 100)
       : null
 
-  const notasDinamicas: NotasPorId = {
-  ep: notaEP,
-  ef: notaEF,
+  const estadoMostrado =
+    modoNotas === 'simulacion'
+      ? notaFinalMostrada >= configuracionEDO.notaMinima
+        ? 'Aprobado en simulación'
+        : `No alcanza ${configuracionEDO.notaMinima}`
+      : porcentajeEvaluado === 0
+        ? 'Sin notas'
+        : porcentajeEvaluado < 100
+          ? 'En progreso'
+          : notaFinalOficial >= configuracionEDO.notaMinima
+            ? 'Aprobado'
+            : 'Desaprobado'
 
-  ea1: notaEA1,
-  ea2: notaEA2,
-  ea3: notaEA3,
-
-  ta1: notaTA1,
-  ta2: notaTA2,
-
-  rc1: notaRC1,
-  rc2: notaRC2,
-
-  p1: notaP1,
-
-  ea4: notaEA4,
-  ea5: notaEA5,
-  ea6: notaEA6,
-
-  ta3: notaTA3,
-  ta4: notaTA4,
-
-  rc3: notaRC3,
-  rc4: notaRC4,
-
-  p2: notaP2,
-  p3: notaP3,
-}  
-
-const componenteEC1 = configuracionEDO.componentes.find(
-  (componente) => componente.id === 'ec1',
-)
-
-const componenteEC2 = configuracionEDO.componentes.find(
-  (componente) => componente.id === 'ec2',
-)
-
-const ec1Dinamica = componenteEC1
-  ? calcularComponente(componenteEC1, notasDinamicas)
-  : 0
-
-const ec2Dinamica = componenteEC2
-  ? calcularComponente(componenteEC2, notasDinamicas)
-  : 0
-
-const notaFinalDinamica = calcularNotaFinal(
-  configuracionEDO.componentes,
-  notasDinamicas,
-  configuracionEDO.notaMaxima,
-)
-
-const coincidenEC1 = ec1Dinamica === ec1
-
-const coincidenEC2 = ec2Dinamica === ec2
-
-const coincideNotaFinal =
-  Math.abs(notaFinalDinamica - notaFinalSinRedondear) < 0.0001
-
-const motorCoincide =
-  coincidenEC1 && coincidenEC2 && coincideNotaFinal
-
-  const evaluacionesDinamicas =
-  obtenerEvaluacionesDirectas(
-    configuracionEDO.componentes,
-  )  
-
-  const notaFinalAutomatica = calcularNotaFinal(
-    configuracionEDO.componentes,
-    notasAutomaticas,
-    configuracionEDO.notaMaxima,
-  )
+  const cursos = [
+    {
+      id: 1,
+      nombre: configuracionEDO.nombre,
+      promedio:
+        promedioActual === null
+          ? 'Sin notas'
+          : promedioActual.toFixed(2),
+      pendientes,
+      proximaActividad: proximaActividad
+        ? proximaActividad.nombre
+        : 'Sin actividades pendientes',
+    },
+  ]
 
   return (
     <main className="app">
@@ -762,15 +590,13 @@ const motorCoincide =
           <p>Planificación académica universitaria</p>
         </div>
 
-        <span>Ciclo 2026-1</span>
+        <span>Ciclo {configuracionEDO.ciclo}</span>
       </header>
 
       {vista === 'inicio' && (
         <section className="welcome">
           <p>Panel principal</p>
-
           <h1>Organiza tu ciclo universitario</h1>
-
           <p>
             Controla tus cursos, actividades, calendario y notas desde un solo
             lugar.
@@ -785,9 +611,7 @@ const motorCoincide =
       {vista === 'panel' && (
         <section className="welcome">
           <p>Semana actual</p>
-
           <h1>Semana 1 de 16</h1>
-
           <p>
             Aquí aparecerá el resumen de tus actividades, cursos y evaluaciones.
           </p>
@@ -817,7 +641,7 @@ const motorCoincide =
                 <article className="course-card" key={curso.id}>
                   <div>
                     <h3>{curso.nombre}</h3>
-                    <p>Promedio: {curso.promedio}</p>
+                    <p>Promedio evaluado: {curso.promedio}</p>
                     <p>Pendientes: {curso.pendientes}</p>
                     <p>Próxima actividad: {curso.proximaActividad}</p>
                   </div>
@@ -858,7 +682,7 @@ const motorCoincide =
 
           <div className="course-heading">
             <p>Curso</p>
-            <h1>Ecuaciones Diferenciales</h1>
+            <h1>{configuracionEDO.nombre}</h1>
             <span>En curso</span>
           </div>
 
@@ -896,8 +720,12 @@ const motorCoincide =
             <>
               <div className="course-summary-grid">
                 <article className="summary-card">
-                  <strong>—</strong>
-                  <span>Promedio actual</span>
+                  <strong>
+                    {promedioActual === null
+                      ? '—'
+                      : promedioActual.toFixed(2)}
+                  </strong>
+                  <span>Promedio evaluado</span>
                 </article>
 
                 <article className="summary-card">
@@ -907,18 +735,16 @@ const motorCoincide =
 
                 <article className="summary-card">
                   <strong>{pendientes}</strong>
-                  <span>Pendientes</span>
+                  <span>Actividades pendientes</span>
                 </article>
               </div>
 
               {proximaActividad ? (
                 <article className="next-activity">
                   <p>Próxima actividad</p>
-
                   <h2>
                     {proximaActividad.nombre} — {proximaActividad.tipo}
                   </h2>
-
                   <span>
                     {proximaActividad.semana} · {proximaActividad.fecha}
                   </span>
@@ -936,25 +762,12 @@ const motorCoincide =
               <section className="grade-components">
                 <h2>Componentes de la nota</h2>
 
-                <div className="grade-component">
-                  <span>Examen parcial</span>
-                  <strong>20 %</strong>
-                </div>
-
-                <div className="grade-component">
-                  <span>Evaluación continua 1</span>
-                  <strong>25 %</strong>
-                </div>
-
-                <div className="grade-component">
-                  <span>Evaluación continua 2</span>
-                  <strong>25 %</strong>
-                </div>
-
-                <div className="grade-component">
-                  <span>Examen final</span>
-                  <strong>30 %</strong>
-                </div>
+                {configuracionEDO.componentes.map((componente) => (
+                  <div className="grade-component" key={componente.id}>
+                    <span>{componente.nombre}</span>
+                    <strong>{componente.peso ?? 0} %</strong>
+                  </div>
+                ))}
               </section>
             </>
           )}
@@ -986,7 +799,6 @@ const motorCoincide =
                   <div className="form-grid">
                     <label className="form-field">
                       <span>Nombre</span>
-
                       <input
                         type="text"
                         value={nombreActividad}
@@ -1000,7 +812,6 @@ const motorCoincide =
 
                     <label className="form-field">
                       <span>Tipo</span>
-
                       <select
                         value={tipoActividad}
                         onChange={(event) =>
@@ -1019,7 +830,6 @@ const motorCoincide =
 
                     <label className="form-field">
                       <span>Semana</span>
-
                       <input
                         type="number"
                         min="1"
@@ -1035,7 +845,6 @@ const motorCoincide =
 
                     <label className="form-field">
                       <span>Fecha exacta opcional</span>
-
                       <input
                         type="date"
                         value={fechaActividad}
@@ -1129,743 +938,258 @@ const motorCoincide =
               <div className="grades-heading">
                 <p>Calculadora del curso</p>
                 <h2>Sistema de evaluación</h2>
-
                 <span>
                   Nota final = 20 % EP + 30 % EF + 25 % EC1 + 25 % EC2
                 </span>
               </div>
 
               <div className="final-grade-grid">
-              <article className="final-grade-card">
-                <span>Nota final provisional</span>
-                <strong>{notaFinalSinRedondear.toFixed(2)}</strong>
-              </article>
+                <article className="final-grade-card">
+                  <span>
+                    {modoNotas === 'simulacion'
+                      ? 'Nota final simulada'
+                      : 'Nota final provisional'}
+                  </span>
+                  <strong>{notaFinalMostrada.toFixed(2)}</strong>
+                </article>
 
-              <article className="final-grade-card">
-                <span>Nota final redondeada</span>
-                <strong>{notaFinalRedondeada}</strong>
-              </article>
+                <article className="final-grade-card">
+                  <span>Nota final redondeada</span>
+                  <strong>{notaFinalRedondeada}</strong>
+                </article>
 
-              <article className="final-grade-card">
-                <span>Porcentaje evaluado</span>
-                <strong>{porcentajeEvaluado.toFixed(2)} %</strong>
-              </article>
+                <article className="final-grade-card">
+                  <span>Porcentaje oficialmente evaluado</span>
+                  <strong>{porcentajeEvaluado.toFixed(2)} %</strong>
+                </article>
 
-              <article className="final-grade-card">
-                <span>Estado provisional</span>
-                <strong className="grade-status">{estadoFinal}</strong>
-              </article>
+                <article className="final-grade-card">
+                  <span>Estado</span>
+                  <strong className="grade-status">{estadoMostrado}</strong>
+                </article>
               </div>
 
               <section className="goal-calculator">
-              <div className="goal-heading">
-                <div>
-                  <p>Proyección académica</p>
-                  <h3>Nota necesaria</h3>
+                <div className="goal-heading">
+                  <div>
+                    <p>Proyección académica</p>
+                    <h3>Nota necesaria</h3>
+                  </div>
+
+                  <label className="goal-field">
+                    <span>Meta final</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      step="0.1"
+                      value={metaNota}
+                      onChange={(event) =>
+                        actualizarMeta(event.target.value)
+                      }
+                    />
+                  </label>
                 </div>
 
-                <label className="goal-field">
-                  <span>Meta final</span>
+                <div className="goal-results">
+                  <article>
+                    <span>Puntos acumulados oficiales</span>
+                    <strong>{puntosAcumulados.toFixed(2)}</strong>
+                  </article>
 
-                  <input
-                    type="number"
-                    min="0"
-                    max="20"
-                    step="0.1"
-                    value={metaNota}
-                    onChange={(event) =>
-                      actualizarNota(event.target.value, setMetaNota)
+                  <article>
+                    <span>Porcentaje pendiente</span>
+                    <strong>{porcentajePendiente.toFixed(2)} %</strong>
+                  </article>
+                </div>
+
+                <div className="goal-message">
+                  {promedioNecesario === null ? (
+                    <strong>
+                      Ya no quedan evaluaciones pendientes.
+                    </strong>
+                  ) : promedioNecesario <= 0 ? (
+                    <strong>
+                      La meta ya está asegurada con las notas oficiales.
+                    </strong>
+                  ) : promedioNecesario > 20 ? (
+                    <strong>
+                      La meta no es alcanzable con las evaluaciones restantes.
+                    </strong>
+                  ) : (
+                    <>
+                      <span>
+                        Promedio aproximado necesario en lo pendiente
+                      </span>
+                      <strong>{promedioNecesario.toFixed(2)}</strong>
+                    </>
+                  )}
+                </div>
+
+                <small>
+                  Es una estimación. Los redondeos internos de EC1 y EC2 pueden
+                  modificar ligeramente el resultado final.
+                </small>
+              </section>
+
+              <section className="dynamic-evaluations-check">
+                <div className="dynamic-evaluations-heading">
+                  <div>
+                    <p>Calculadora dinámica</p>
+                    <h3>
+                      {modoNotas === 'oficial'
+                        ? 'Mis notas oficiales'
+                        : 'Simulador de notas'}
+                    </h3>
+                  </div>
+
+                  <strong>
+                    {evaluacionesDinamicas.length} evaluaciones
+                  </strong>
+                </div>
+
+                <div className="notes-mode-switch">
+                  <button
+                    type="button"
+                    className={
+                      modoNotas === 'oficial'
+                        ? 'notes-mode-button active-notes-mode'
+                        : 'notes-mode-button'
                     }
-                  />
-                </label>
-              </div>
+                    onClick={activarModoOficial}
+                  >
+                    Notas oficiales
+                  </button>
 
-              <div className="goal-results">
-                <article>
-                  <span>Puntos acumulados</span>
-                  <strong>{puntosAcumulados.toFixed(2)}</strong>
-                </article>
+                  <button
+                    type="button"
+                    className={
+                      modoNotas === 'simulacion'
+                        ? 'notes-mode-button active-notes-mode'
+                        : 'notes-mode-button'
+                    }
+                    onClick={activarModoSimulacion}
+                  >
+                    Simulador
+                  </button>
+                </div>
 
-                <article>
-                  <span>Porcentaje pendiente</span>
-                  <strong>{porcentajePendiente.toFixed(2)} %</strong>
-                </article>
-              </div>
+                <div className="simulation-summary">
+                  <article>
+                    <span>Nota final oficial</span>
+                    <strong>{notaFinalOficial.toFixed(2)}</strong>
+                  </article>
 
-              <div className="goal-message">
-                {promedioNecesario === null ? (
-                  <strong>
-                    Ya no quedan evaluaciones pendientes.
-                  </strong>
-                ) : promedioNecesario <= 0 ? (
-                  <strong>
-                    La meta ya está asegurada con los puntos acumulados.
-                  </strong>
-                ) : promedioNecesario > 20 ? (
-                  <strong>
-                    La meta no es alcanzable con las evaluaciones restantes.
-                  </strong>
+                  {modoNotas === 'simulacion' && (
+                    <>
+                      <article>
+                        <span>Nota final simulada</span>
+                        <strong>{notaFinalMostrada.toFixed(2)}</strong>
+                      </article>
+
+                      <article>
+                        <span>Cambio estimado</span>
+                        <strong>
+                          {diferenciaSimulada >= 0 ? '+' : ''}
+                          {diferenciaSimulada.toFixed(2)}
+                        </strong>
+                      </article>
+                    </>
+                  )}
+                </div>
+
+                {modoNotas === 'oficial' ? (
+                  <p className="notes-mode-message">
+                    Ingresa únicamente las notas que ya fueron publicadas.
+                    Estas notas se guardarán al cerrar o recargar la app.
+                  </p>
                 ) : (
-                  <>
-                    <span>
-                      Promedio aproximado necesario en lo restante
-                    </span>
-
-                    <strong>{promedioNecesario.toFixed(2)}</strong>
-                  </>
+                  <p className="notes-mode-message simulation-message">
+                    Las notas oficiales están bloqueadas. Completa solamente
+                    las evaluaciones pendientes para probar resultados. La
+                    simulación no se guardará.
+                  </p>
                 )}
-              </div>
 
-              <small>
-                Estimación provisional. Los redondeos de EC1 y EC2 pueden
-                modificar ligeramente el resultado final.
-              </small>
-            </section>
+                <div className="grade-input-grid">
+                  {evaluacionesDinamicas.map((evaluacion) => {
+                    const valorOficial =
+                      notasOficiales[evaluacion.id]
 
-            <section className="engine-check">
-  <div className="engine-check-heading">
-    <div>
-      <p>Motor general</p>
-      <h3>Comprobación de cálculos</h3>
-    </div>
+                    const campoTieneNotaOficial =
+                      tieneNota(valorOficial)
 
-    <span
-      className={
-        motorCoincide
-          ? 'engine-status engine-success'
-          : 'engine-status engine-error'
-      }
-    >
-      {motorCoincide ? 'Los cálculos coinciden' : 'Revisar cálculos'}
-    </span>
-  </div>
+                    const valorActivo =
+                      notasEnFormulario[evaluacion.id] ?? ''
 
-  <div className="engine-results">
-    <article>
-      <span>EC1 manual</span>
-      <strong>{ec1}</strong>
-    </article>
+                    const tieneNotaSimulada =
+                      modoNotas === 'simulacion' &&
+                      !campoTieneNotaOficial &&
+                      tieneNota(valorActivo)
 
-    <article>
-      <span>EC1 dinámica</span>
-      <strong>{ec1Dinamica}</strong>
-    </article>
+                    const campoBloqueado =
+                      modoNotas === 'simulacion' &&
+                      campoTieneNotaOficial
 
-    <article>
-      <span>EC2 manual</span>
-      <strong>{ec2}</strong>
-    </article>
+                    return (
+                      <label
+                        className="grade-input-field"
+                        key={evaluacion.id}
+                      >
+                        <div className="dynamic-note-heading">
+                          <span>{evaluacion.nombre}</span>
 
-    <article>
-      <span>EC2 dinámica</span>
-      <strong>{ec2Dinamica}</strong>
-    </article>
-
-    <article>
-      <span>Nota final manual</span>
-      <strong>{notaFinalSinRedondear.toFixed(2)}</strong>
-    </article>
-
-    <article>
-      <span>Nota final dinámica</span>
-      <strong>{notaFinalDinamica.toFixed(2)}</strong>
-    </article>
-  </div>
-
-  <small>
-    El cálculo dinámico está leyendo la estructura guardada en
-    edoConfig.ts.
-  </small>
-</section>
-
-<section className="dynamic-evaluations-check">
-  <div className="dynamic-evaluations-heading">
-    <div>
-      <p>Interfaz dinámica</p>
-      <h3>Formulario automático de notas</h3>
-    </div>
-
-    <strong>
-      {evaluacionesDinamicas.length} evaluaciones
-    </strong>
-  </div>
-
-  <div className="calculated-grade">
-    <span>Nota final del formulario automático</span>
-
-    <strong>
-      {notaFinalAutomatica.toFixed(2)}
-    </strong>
-  </div>
-
-  <div className="grade-input-grid">
-    {evaluacionesDinamicas.map((evaluacion) => (
-      <label
-        className="grade-input-field"
-        key={evaluacion.id}
-      >
-        <span>
-          {evaluacion.nombre}
-        </span>
-
-        <input
-          type="number"
-          min="0"
-          max={evaluacion.notaMaxima}
-          step="0.01"
-          value={String(
-            notasAutomaticas[evaluacion.id] ?? '',
-          )}
-          onChange={(event) =>
-            actualizarNotaAutomatica(
-              evaluacion.id,
-              event.target.value,
-              evaluacion.notaMaxima,
-            )
-          }
-          placeholder={`0 a ${evaluacion.notaMaxima}`}
-        />
-
-        <small>
-          Máximo: {evaluacion.notaMaxima}
-        </small>
-      </label>
-    ))}
-  </div>
-
-  <small>
-    Estos campos fueron creados automáticamente leyendo
-    la configuración del curso.
-  </small>
-</section>
-
-
-
-
-              <section className="grade-tree">
-              <article className="grade-group">
-  <div className="grade-group-title">
-    <div>
-      <h3>Examen parcial</h3>
-      <p>Nota directa sobre 20</p>
-    </div>
-
-    <strong>20 %</strong>
-  </div>
-
-  <div className="grade-input-section">
-    <div className="grade-input-grid">
-      <label className="grade-input-field">
-        <span>EP</span>
-
-        <input
-          type="number"
-          min="0"
-          max="20"
-          step="0.01"
-          value={notaEP}
-          onChange={(event) =>
-            actualizarNota(event.target.value, setNotaEP)
-          }
-          placeholder="0 a 20"
-        />
-      </label>
-    </div>
-  </div>
-</article>
-
-                <article className="grade-group">
-                  <div className="grade-group-title">
-                    <div>
-                      <h3>Evaluación continua 1</h3>
-                      <p>
-                        Se redondea antes de calcular la nota final
-                      </p>
-                    </div>
-
-                    <strong>25 %</strong>
-                  </div>
-
-                  <div className="subcomponents-list">
-                    <div>
-                      <span>PEA123</span>
-                      <strong>70 %</strong>
-                    </div>
-
-                    <div>
-                      <span>PTA12</span>
-                      <strong>10 %</strong>
-                    </div>
-
-                    <div>
-                      <span>PRC12</span>
-                      <strong>10 %</strong>
-                    </div>
-
-                    <div>
-                      <span>P1</span>
-                      <strong>10 %</strong>
-                    </div>
-                  </div>
-
-                  <div className="grade-input-section">
-                    <h4>Evaluaciones en aula</h4>
-
-                    <div className="grade-input-grid">
-                      <label className="grade-input-field">
-                        <span>EA1</span>
+                          <small
+                            className={
+                              campoTieneNotaOficial
+                                ? 'note-origin official-note'
+                                : tieneNotaSimulada
+                                  ? 'note-origin simulated-note'
+                                  : 'note-origin pending-note'
+                            }
+                          >
+                            {campoTieneNotaOficial
+                              ? 'Oficial'
+                              : tieneNotaSimulada
+                                ? 'Simulada'
+                                : 'Pendiente'}
+                          </small>
+                        </div>
 
                         <input
                           type="number"
                           min="0"
-                          max="20"
+                          max={evaluacion.notaMaxima}
                           step="0.01"
-                          value={notaEA1}
+                          value={String(valorActivo)}
+                          disabled={campoBloqueado}
                           onChange={(event) =>
                             actualizarNota(
+                              evaluacion.id,
                               event.target.value,
-                              setNotaEA1,
+                              evaluacion.notaMaxima,
                             )
                           }
-                          placeholder="0 a 20"
+                          placeholder={`0 a ${evaluacion.notaMaxima}`}
                         />
+
+                        <small>
+                          Máximo: {evaluacion.notaMaxima}
+                        </small>
                       </label>
+                    )
+                  })}
+                </div>
 
-                      <label className="grade-input-field">
-                        <span>EA2</span>
-
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          step="0.01"
-                          value={notaEA2}
-                          onChange={(event) =>
-                            actualizarNota(
-                              event.target.value,
-                              setNotaEA2,
-                            )
-                          }
-                          placeholder="0 a 20"
-                        />
-                      </label>
-
-                      <label className="grade-input-field">
-                        <span>EA3</span>
-
-                        <input
-                          type="number"
-                          min="0"
-                          max="20"
-                          step="0.01"
-                          value={notaEA3}
-                          onChange={(event) =>
-                            actualizarNota(
-                              event.target.value,
-                              setNotaEA3,
-                            )
-                          }
-                          placeholder="0 a 20"
-                        />
-                      </label>
-                    </div>
-
-                    <div className="calculated-grade">
-                    <span>Promedio provisional PEA123</span>
-
-                      <strong>{pea123.toFixed(2)}</strong>
-                    </div>
-
-                    <div className="grade-input-section">
-  <h4>Tareas</h4>
-
-  <div className="grade-input-grid">
-    <label className="grade-input-field">
-      <span>TA1</span>
-
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaTA1}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaTA1)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-
-    <label className="grade-input-field">
-      <span>TA2</span>
-
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaTA2}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaTA2)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-  </div>
-
-  <div className="calculated-grade">
-  <span>Promedio provisional PTA12</span>
-
-    <strong>{pta12.toFixed(2)}</strong>
-  </div>
-</div>
-
-<div className="grade-input-section">
-  <h4>Resolución de casos</h4>
-
-  <div className="grade-input-grid">
-    <label className="grade-input-field">
-      <span>RC1</span>
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaRC1}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaRC1)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-
-    <label className="grade-input-field">
-      <span>RC2</span>
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaRC2}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaRC2)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-  </div>
-
-  <div className="calculated-grade">
-    <span>Promedio provisional PRC12</span>
-    <strong>{prc12.toFixed(2)}</strong>
-  </div>
-</div>
-
-<div className="grade-input-section">
-  <h4>Proyecto ABP</h4>
-
-  <div className="grade-input-grid">
-    <label className="grade-input-field">
-      <span>P1</span>
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaP1}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaP1)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-  </div>
-
-  <div className="calculated-grade">
-    <span>EC1 antes del redondeo</span>
-    <strong>{ec1SinRedondear.toFixed(2)}</strong>
-  </div>
-
-  <div className="calculated-grade">
-    <span>EC1 redondeada</span>
-    <strong>{ec1}</strong>
-  </div>
-</div>
-
-
-                  </div>
-                </article>
-
-                <article className="grade-group">
-  <div className="grade-group-title">
-    <div>
-      <h3>Evaluación continua 2</h3>
-      <p>Se redondea antes de calcular la nota final</p>
-    </div>
-
-    <strong>25 %</strong>
-  </div>
-
-  <div className="subcomponents-list">
-    <div>
-      <span>PEA456</span>
-      <strong>60 %</strong>
-    </div>
-
-    <div>
-      <span>PTA34</span>
-      <strong>10 %</strong>
-    </div>
-
-    <div>
-      <span>PRC34</span>
-      <strong>10 %</strong>
-    </div>
-
-    <div>
-      <span>P2 + P3</span>
-      <strong>20 %</strong>
-    </div>
-  </div>
-
-  <div className="grade-input-section">
-    <h4>Evaluaciones en aula</h4>
-
-    <div className="grade-input-grid">
-      <label className="grade-input-field">
-        <span>EA4</span>
-
-        <input
-          type="number"
-          min="0"
-          max="20"
-          step="0.01"
-          value={notaEA4}
-          onChange={(event) =>
-            actualizarNota(event.target.value, setNotaEA4)
-          }
-          placeholder="0 a 20"
-        />
-      </label>
-
-      <label className="grade-input-field">
-        <span>EA5</span>
-
-        <input
-          type="number"
-          min="0"
-          max="20"
-          step="0.01"
-          value={notaEA5}
-          onChange={(event) =>
-            actualizarNota(event.target.value, setNotaEA5)
-          }
-          placeholder="0 a 20"
-        />
-      </label>
-
-      <label className="grade-input-field">
-        <span>EA6</span>
-
-        <input
-          type="number"
-          min="0"
-          max="20"
-          step="0.01"
-          value={notaEA6}
-          onChange={(event) =>
-            actualizarNota(event.target.value, setNotaEA6)
-          }
-          placeholder="0 a 20"
-        />
-      </label>
-    </div>
-
-    <div className="calculated-grade">
-      <span>Promedio provisional PEA456</span>
-      <strong>{pea456.toFixed(2)}</strong>
-    </div>
-  </div>
-</article>
-
-<div className="grade-input-section">
-  <h4>Tareas</h4>
-
-  <div className="grade-input-grid">
-    <label className="grade-input-field">
-      <span>TA3</span>
-
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaTA3}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaTA3)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-
-    <label className="grade-input-field">
-      <span>TA4</span>
-
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaTA4}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaTA4)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-  </div>
-
-  <div className="calculated-grade">
-    <span>Promedio provisional PTA34</span>
-    <strong>{pta34.toFixed(2)}</strong>
-  </div>
-</div>
-
-<div className="grade-input-section">
-  <h4>Resolución de casos</h4>
-
-  <div className="grade-input-grid">
-    <label className="grade-input-field">
-      <span>RC3</span>
-
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaRC3}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaRC3)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-
-    <label className="grade-input-field">
-      <span>RC4</span>
-
-      <input
-        type="number"
-        min="0"
-        max="20"
-        step="0.01"
-        value={notaRC4}
-        onChange={(event) =>
-          actualizarNota(event.target.value, setNotaRC4)
-        }
-        placeholder="0 a 20"
-      />
-    </label>
-  </div>
-
-  <div className="calculated-grade">
-    <span>Promedio provisional PRC34</span>
-    <strong>{prc34.toFixed(2)}</strong>
-  </div>
-</div>
-
-
-<div className="grade-input-section">
-  <h4>Proyecto ABP</h4>
-
-  <div className="grade-input-grid">
-    <label className="grade-input-field">
-      <span>P2 — máximo 5</span>
-
-      <input
-        type="number"
-        min="0"
-        max="5"
-        step="0.01"
-        value={notaP2}
-        onChange={(event) =>
-          actualizarNotaConMaximo(
-            event.target.value,
-            5,
-            setNotaP2,
-          )
-        }
-        placeholder="0 a 5"
-      />
-    </label>
-
-    <label className="grade-input-field">
-      <span>P3 — máximo 15</span>
-
-      <input
-        type="number"
-        min="0"
-        max="15"
-        step="0.01"
-        value={notaP3}
-        onChange={(event) =>
-          actualizarNotaConMaximo(
-            event.target.value,
-            15,
-            setNotaP3,
-          )
-        }
-        placeholder="0 a 15"
-      />
-    </label>
-  </div>
-
-  <div className="calculated-grade">
-    <span>P2 + P3</span>
-    <strong>{proyecto2.toFixed(2)} / 20</strong>
-  </div>
-
-  <div className="calculated-grade">
-    <span>EC2 antes del redondeo</span>
-    <strong>{ec2SinRedondear.toFixed(2)}</strong>
-  </div>
-
-  <div className="calculated-grade">
-    <span>EC2 redondeada</span>
-    <strong>{ec2}</strong>
-  </div>
-</div>
-
-<article className="grade-group">
-  <div className="grade-group-title">
-    <div>
-      <h3>Examen final</h3>
-      <p>Nota directa sobre 20</p>
-    </div>
-
-    <strong>30 %</strong>
-  </div>
-
-  <div className="grade-input-section">
-    <div className="grade-input-grid">
-      <label className="grade-input-field">
-        <span>EF</span>
-
-        <input
-          type="number"
-          min="0"
-          max="20"
-          step="0.01"
-          value={notaEF}
-          onChange={(event) =>
-            actualizarNota(event.target.value, setNotaEF)
-          }
-          placeholder="0 a 20"
-        />
-      </label>
-    </div>
-  </div>
-</article>
+                {modoNotas === 'simulacion' && (
+                  <button
+                    type="button"
+                    className="reset-simulation-button"
+                    onClick={restablecerSimulacion}
+                  >
+                    Restablecer simulación
+                  </button>
+                )}
               </section>
             </section>
           )}
@@ -1873,6 +1197,6 @@ const motorCoincide =
       )}
     </main>
   )
-} 
+}
 
 export default App
