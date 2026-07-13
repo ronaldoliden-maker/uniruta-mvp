@@ -176,6 +176,10 @@ function App() {
     () => localStorage.getItem('uniruta-nota-ef') ?? '',
   )
 
+  const [metaNota, setMetaNota] = useState(
+    () => localStorage.getItem('uniruta-meta-nota') ?? '10.5',
+  )
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -240,6 +244,10 @@ function App() {
     localStorage.setItem('uniruta-nota-ep', notaEP)
     localStorage.setItem('uniruta-nota-ef', notaEF)
   }, [notaEP, notaEF])
+
+  useEffect(() => {
+    localStorage.setItem('uniruta-meta-nota', metaNota)
+  }, [metaNota])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -516,6 +524,22 @@ const estadoFinal =
     return nota !== '' ? peso : 0
   }
 
+  function obtenerAporte(
+    nota: string,
+    notaMaxima: number,
+    peso: number,
+  ) {
+    if (nota === '') {
+      return 0
+    }
+  
+    return (
+      (Number(nota) / notaMaxima) *
+      20 *
+      (peso / 100)
+    )
+  }
+
   const porcentajeEvaluado =
   obtenerPesoRegistrado(notaEP, 20) +
   obtenerPesoRegistrado(notaEF, 30) +
@@ -544,6 +568,45 @@ const estadoFinal =
 
   obtenerPesoRegistrado(notaP2, 1.25) +
   obtenerPesoRegistrado(notaP3, 3.75)
+
+  const puntosAcumulados =
+  obtenerAporte(notaEP, 20, 20) +
+  obtenerAporte(notaEF, 20, 30) +
+
+  obtenerAporte(notaEA1, 20, 17.5 / 3) +
+  obtenerAporte(notaEA2, 20, 17.5 / 3) +
+  obtenerAporte(notaEA3, 20, 17.5 / 3) +
+
+  obtenerAporte(notaTA1, 20, 1.25) +
+  obtenerAporte(notaTA2, 20, 1.25) +
+
+  obtenerAporte(notaRC1, 20, 1.25) +
+  obtenerAporte(notaRC2, 20, 1.25) +
+
+  obtenerAporte(notaP1, 20, 2.5) +
+
+  obtenerAporte(notaEA4, 20, 5) +
+  obtenerAporte(notaEA5, 20, 5) +
+  obtenerAporte(notaEA6, 20, 5) +
+
+  obtenerAporte(notaTA3, 20, 1.25) +
+  obtenerAporte(notaTA4, 20, 1.25) +
+
+  obtenerAporte(notaRC3, 20, 1.25) +
+  obtenerAporte(notaRC4, 20, 1.25) +
+
+  obtenerAporte(notaP2, 5, 1.25) +
+  obtenerAporte(notaP3, 15, 3.75)
+
+const porcentajePendiente = 100 - porcentajeEvaluado
+
+const metaNumerica = Number(metaNota || 0)
+
+const promedioNecesario =
+  porcentajePendiente > 0
+    ? (metaNumerica - puntosAcumulados) /
+      (porcentajePendiente / 100)
+    : null
 
   return (
     <main className="app">
@@ -947,6 +1010,71 @@ const estadoFinal =
                 <strong className="grade-status">{estadoFinal}</strong>
               </article>
               </div>
+
+              <section className="goal-calculator">
+              <div className="goal-heading">
+                <div>
+                  <p>Proyección académica</p>
+                  <h3>Nota necesaria</h3>
+                </div>
+
+                <label className="goal-field">
+                  <span>Meta final</span>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    step="0.1"
+                    value={metaNota}
+                    onChange={(event) =>
+                      actualizarNota(event.target.value, setMetaNota)
+                    }
+                  />
+                </label>
+              </div>
+
+              <div className="goal-results">
+                <article>
+                  <span>Puntos acumulados</span>
+                  <strong>{puntosAcumulados.toFixed(2)}</strong>
+                </article>
+
+                <article>
+                  <span>Porcentaje pendiente</span>
+                  <strong>{porcentajePendiente.toFixed(2)} %</strong>
+                </article>
+              </div>
+
+              <div className="goal-message">
+                {promedioNecesario === null ? (
+                  <strong>
+                    Ya no quedan evaluaciones pendientes.
+                  </strong>
+                ) : promedioNecesario <= 0 ? (
+                  <strong>
+                    La meta ya está asegurada con los puntos acumulados.
+                  </strong>
+                ) : promedioNecesario > 20 ? (
+                  <strong>
+                    La meta no es alcanzable con las evaluaciones restantes.
+                  </strong>
+                ) : (
+                  <>
+                    <span>
+                      Promedio aproximado necesario en lo restante
+                    </span>
+
+                    <strong>{promedioNecesario.toFixed(2)}</strong>
+                  </>
+                )}
+              </div>
+
+              <small>
+                Estimación provisional. Los redondeos de EC1 y EC2 pueden
+                modificar ligeramente el resultado final.
+              </small>
+            </section>
 
               <section className="grade-tree">
               <article className="grade-group">
