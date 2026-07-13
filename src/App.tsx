@@ -188,6 +188,36 @@ function App() {
     () => localStorage.getItem('uniruta-meta-nota') ?? '10.5',
   )
 
+  const [notasAutomaticas, setNotasAutomaticas] =
+  useState<NotasPorId>(() => {
+    const notasGuardadas = localStorage.getItem(
+      'uniruta-notas-automaticas',
+    )
+
+    if (notasGuardadas) {
+      try {
+        return JSON.parse(notasGuardadas) as NotasPorId
+      } catch {
+        localStorage.removeItem(
+          'uniruta-notas-automaticas',
+        )
+      }
+    }
+
+    const notasIniciales: NotasPorId = {}
+
+    obtenerEvaluacionesDirectas(
+      configuracionEDO.componentes,
+    ).forEach((evaluacion) => {
+      notasIniciales[evaluacion.id] =
+        localStorage.getItem(
+          `uniruta-nota-${evaluacion.id}`,
+        ) ?? ''
+    })
+
+    return notasIniciales
+  })
+
   const [actividades, setActividades] = useState<Actividad[]>(() => {
     const actividadesGuardadas = localStorage.getItem('uniruta-actividades')
 
@@ -256,6 +286,13 @@ function App() {
   useEffect(() => {
     localStorage.setItem('uniruta-meta-nota', metaNota)
   }, [metaNota])
+
+  useEffect(() => {
+    localStorage.setItem(
+      'uniruta-notas-automaticas',
+      JSON.stringify(notasAutomaticas),
+    )
+  }, [notasAutomaticas])
 
   const pendientes = actividades.filter(
     (actividad) => actividad.estado !== 'Completada',
@@ -461,6 +498,34 @@ function App() {
   
     if (numero >= 0 && numero <= maximo) {
       guardarNota(valor)
+    }
+  }
+
+  function actualizarNotaAutomatica(
+    id: string,
+    valor: string,
+    notaMaxima: number,
+  ) {
+    if (valor === '') {
+      setNotasAutomaticas((notasActuales) => ({
+        ...notasActuales,
+        [id]: '',
+      }))
+  
+      return
+    }
+  
+    const numero = Number(valor)
+  
+    if (
+      Number.isFinite(numero) &&
+      numero >= 0 &&
+      numero <= notaMaxima
+    ) {
+      setNotasAutomaticas((notasActuales) => ({
+        ...notasActuales,
+        [id]: valor,
+      }))
     }
   }
 
@@ -682,6 +747,12 @@ const motorCoincide =
   obtenerEvaluacionesDirectas(
     configuracionEDO.componentes,
   )  
+
+  const notaFinalAutomatica = calcularNotaFinal(
+    configuracionEDO.componentes,
+    notasAutomaticas,
+    configuracionEDO.notaMaxima,
+  )
 
   return (
     <main className="app">
@@ -1211,7 +1282,7 @@ const motorCoincide =
   <div className="dynamic-evaluations-heading">
     <div>
       <p>Interfaz dinámica</p>
-      <h3>Evaluaciones detectadas</h3>
+      <h3>Formulario automático de notas</h3>
     </div>
 
     <strong>
@@ -1219,24 +1290,56 @@ const motorCoincide =
     </strong>
   </div>
 
-  <div className="dynamic-evaluations-list">
-    {evaluacionesDinamicas.map((evaluacion) => (
-      <article key={evaluacion.id}>
-        <div>
-          <strong>{evaluacion.nombre}</strong>
-          <span>ID: {evaluacion.id}</span>
-        </div>
+  <div className="calculated-grade">
+    <span>Nota final del formulario automático</span>
 
-        <span>Máximo: {evaluacion.notaMaxima}</span>
-      </article>
+    <strong>
+      {notaFinalAutomatica.toFixed(2)}
+    </strong>
+  </div>
+
+  <div className="grade-input-grid">
+    {evaluacionesDinamicas.map((evaluacion) => (
+      <label
+        className="grade-input-field"
+        key={evaluacion.id}
+      >
+        <span>
+          {evaluacion.nombre}
+        </span>
+
+        <input
+          type="number"
+          min="0"
+          max={evaluacion.notaMaxima}
+          step="0.01"
+          value={String(
+            notasAutomaticas[evaluacion.id] ?? '',
+          )}
+          onChange={(event) =>
+            actualizarNotaAutomatica(
+              evaluacion.id,
+              event.target.value,
+              evaluacion.notaMaxima,
+            )
+          }
+          placeholder={`0 a ${evaluacion.notaMaxima}`}
+        />
+
+        <small>
+          Máximo: {evaluacion.notaMaxima}
+        </small>
+      </label>
     ))}
   </div>
 
   <small>
-    Esta lista fue generada automáticamente leyendo
-    edoConfig.ts.
+    Estos campos fueron creados automáticamente leyendo
+    la configuración del curso.
   </small>
 </section>
+
+
 
 
               <section className="grade-tree">
