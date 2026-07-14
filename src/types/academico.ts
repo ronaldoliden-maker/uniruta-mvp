@@ -30,3 +30,15 @@ export type ConfiguracionCurso = {
   notaMaxima: number
   componentes: ComponenteNota[]
 }
+
+// Estados posibles de un curso dentro de UniRuta
+export type EstadoCurso =
+  | 'en_curso'
+  | 'completado'
+  | 'archivado'
+
+// Curso completo registrado en la aplicación
+export type Curso = ConfiguracionCurso & {
+  codigo?: string
+  estado: EstadoCurso
+}
