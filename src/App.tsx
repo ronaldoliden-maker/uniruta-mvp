@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
 import { configuracionEDO } from './data/edoConfig'
+import { cursosIniciales } from './data/cursos'
 import {
   calcularNotaFinal,
   obtenerEvaluacionesDirectas,
@@ -567,20 +568,34 @@ function App() {
             ? 'Aprobado'
             : 'Desaprobado'
 
-  const cursos = [
-    {
-      id: 1,
-      nombre: configuracionEDO.nombre,
-      promedio:
-        promedioActual === null
-          ? 'Sin notas'
-          : promedioActual.toFixed(2),
-      pendientes,
-      proximaActividad: proximaActividad
+// Información que se mostrará en las tarjetas del panel.
+// Por ahora EDO es el único curso que tiene notas y actividades conectadas.
+const cursosPanel = cursosIniciales.map((curso) => {
+  const esCursoEDO =
+    curso.id === configuracionEDO.id
+
+  return {
+    id: curso.id,
+    nombre: curso.nombre,
+    codigo: curso.codigo ?? 'Sin código',
+    ciclo: curso.ciclo,
+
+    promedio:
+      esCursoEDO && promedioActual !== null
+        ? promedioActual.toFixed(2)
+        : 'Sin notas',
+
+    pendientes:
+      esCursoEDO
+        ? pendientes
+        : 0,
+
+    proximaActividad:
+      esCursoEDO && proximaActividad
         ? proximaActividad.nombre
         : 'Sin actividades pendientes',
-    },
-  ]
+  }
+})
 
   return (
     <main className="app">
@@ -637,13 +652,29 @@ function App() {
             <h2>Mis cursos</h2>
 
             <div className="course-list">
-              {cursos.map((curso) => (
-                <article className="course-card" key={curso.id}>
+              {cursosPanel.map((curso) => (
+                <article
+                  className="course-card"
+                  key={curso.id}
+                >
                   <div>
                     <h3>{curso.nombre}</h3>
-                    <p>Promedio evaluado: {curso.promedio}</p>
-                    <p>Pendientes: {curso.pendientes}</p>
-                    <p>Próxima actividad: {curso.proximaActividad}</p>
+
+                    <p>
+                      {curso.codigo} · Ciclo {curso.ciclo}
+                    </p>
+
+                    <p>
+                      Promedio evaluado: {curso.promedio}
+                    </p>
+
+                    <p>
+                      Pendientes: {curso.pendientes}
+                    </p>
+
+                    <p>
+                      Próxima actividad: {curso.proximaActividad}
+                    </p>
                   </div>
 
                   <button
