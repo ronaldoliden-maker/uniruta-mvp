@@ -1,7 +1,7 @@
 import type {
-    ComponenteNota,
-    ReglaRedondeo,
-  } from '../data/edoConfig'
+  ComponenteNota,
+  ReglaRedondeo,
+} from '../types/academico'
   
   export type NotasPorId = Record<
     string,
