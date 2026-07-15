@@ -6,6 +6,10 @@ import Inicio from "./components/Inicio";
 import ResumenGlobal from "./components/ResumenGlobal";
 import TarjetaCurso from "./components/TarjetaCurso";
 
+import NavegacionCurso, {
+  type PestanaCurso,
+} from "./components/NavegacionCurso";
+
 import type { ComponenteNota, Curso } from "./types/academico";
 
 import {
@@ -55,7 +59,8 @@ function App() {
   // 1. Navegación
   // ------------------------------------------------------------
   const [vista, setVista] = useState("inicio");
-  const [pestanaCurso, setPestanaCurso] = useState("resumen");
+  const [pestanaCurso, setPestanaCurso] =
+    useState<PestanaCurso>("resumen");
 
   // Lista editable de cursos del estudiante.
   // Debe declararse antes de utilizar cursosRegistrados.
@@ -1238,51 +1243,10 @@ function App() {
             </span>
           </div>
 
-          <nav className="course-tabs">
-            <button
-              type="button"
-              className={pestanaCurso === "resumen" ? "active-tab" : ""}
-              onClick={() => setPestanaCurso("resumen")}
-            >
-              Resumen
-            </button>
-
-            <button
-              type="button"
-              className={pestanaCurso === "temario" ? "active-tab" : ""}
-              onClick={() => setPestanaCurso("temario")}
-            >
-              Temario
-            </button>
-
-            <button
-              type="button"
-              className={pestanaCurso === "actividades" ? "active-tab" : ""}
-              onClick={() => setPestanaCurso("actividades")}
-            >
-              Actividades
-            </button>
-
-            <button
-              type="button"
-              className={pestanaCurso === "notas" ? "active-tab" : ""}
-              onClick={() => setPestanaCurso("notas")}
-            >
-              Notas
-            </button>
-
-            <button
-              type="button"
-              className={pestanaCurso === "configuracion" ? "active-tab" : ""}
-              onClick={() => setPestanaCurso("configuracion")}
-            >
-              Evaluación
-            </button>
-
-            <button type="button" disabled>
-              Calendario
-            </button>
-          </nav>
+          <NavegacionCurso
+            pestanaActiva={pestanaCurso}
+            onCambiar={setPestanaCurso}
+          />
 
           {pestanaCurso === "resumen" && (
             <>
