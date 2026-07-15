@@ -15,6 +15,13 @@ import {
   guardarActividadesCurso,
 } from "./utils/almacenamientoActividades";
 
+import type { TemaCurso } from "./types/tema";
+
+import {
+  cargarTemarioCurso,
+  guardarTemarioCurso,
+} from "./utils/almacenamientoTemario";
+
 import {
   calcularNotaFinal,
   obtenerEvaluacionesDirectas,
@@ -101,7 +108,20 @@ function App() {
   );
 
   // ------------------------------------------------------------
-  // 3. Notas oficiales y simulación
+  // 3. Temario semanal
+  // ------------------------------------------------------------
+  const [temario, setTemario] = useState<TemaCurso[]>(() =>
+    cursoInicial ? cargarTemarioCurso(cursoInicial.id) : [],
+  );
+
+  const [mostrarFormularioTema, setMostrarFormularioTema] = useState(false);
+  const [temaEditandoId, setTemaEditandoId] = useState<number | null>(null);
+  const [semanaTema, setSemanaTema] = useState("");
+  const [tituloTema, setTituloTema] = useState("");
+  const [detalleTema, setDetalleTema] = useState("");
+
+  // ------------------------------------------------------------
+  // 4. Notas oficiales y simulación
   // ------------------------------------------------------------
   const [notasOficiales, setNotasOficiales] = useState<NotasPorId>(() =>
     cursoInicial ? cargarNotasCurso(cursoInicial) : {},
@@ -117,7 +137,7 @@ function App() {
   );
 
   // ------------------------------------------------------------
-  // 4. Persistencia
+  // 5. Persistencia
   // ------------------------------------------------------------
   // Guarda las actividades utilizando el ID
   // del curso actualmente seleccionado.
@@ -128,6 +148,14 @@ function App() {
 
     guardarActividadesCurso(cursoSeleccionadoId, actividades);
   }, [actividades, cursoSeleccionadoId]);
+
+  useEffect(() => {
+    if (!cursoSeleccionadoId) {
+      return;
+    }
+
+    guardarTemarioCurso(cursoSeleccionadoId, temario);
+  }, [temario, cursoSeleccionadoId]);
 
   useEffect(() => {
     if (!cursoSeleccionadoId) {
@@ -199,6 +227,15 @@ function App() {
   const proximaActividad = actividadesOrdenadas.find(
     (actividad) => actividad.estado !== "Completada",
   );
+
+  const temasOrdenados = [...temario].sort(
+    (temaA, temaB) =>
+      temaA.semana - temaB.semana || temaA.titulo.localeCompare(temaB.titulo),
+  );
+
+  const temasCompletados = temario.filter(
+    (tema) => tema.estado === "Completado",
+  ).length;
 
   const pesoTotalComponentes =
     cursoSeleccionado?.componentes.reduce(
@@ -352,7 +389,122 @@ function App() {
   }
 
   // ------------------------------------------------------------
-  // 7. Funciones de notas
+  // 7. Funciones del temario
+  // ------------------------------------------------------------
+  function limpiarFormularioTema() {
+    setSemanaTema("");
+    setTituloTema("");
+    setDetalleTema("");
+    setTemaEditandoId(null);
+    setMostrarFormularioTema(false);
+  }
+
+  function abrirFormularioNuevoTema() {
+    limpiarFormularioTema();
+    setMostrarFormularioTema(true);
+  }
+
+  function abrirFormularioEdicionTema(id: number) {
+    const temaSeleccionado = temario.find((tema) => tema.id === id);
+
+    if (!temaSeleccionado) {
+      return;
+    }
+
+    setSemanaTema(String(temaSeleccionado.semana));
+    setTituloTema(temaSeleccionado.titulo);
+    setDetalleTema(temaSeleccionado.detalle);
+    setTemaEditandoId(temaSeleccionado.id);
+    setMostrarFormularioTema(true);
+  }
+
+  function guardarTema(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const semana = Number(semanaTema);
+    const titulo = tituloTema.trim();
+    const detalle = detalleTema.trim();
+
+    if (!Number.isInteger(semana) || semana < 1 || semana > 20 || !titulo) {
+      return;
+    }
+
+    if (temaEditandoId !== null) {
+      setTemario((temasActuales) =>
+        temasActuales.map((tema) =>
+          tema.id === temaEditandoId
+            ? {
+                ...tema,
+                semana,
+                titulo,
+                detalle,
+              }
+            : tema,
+        ),
+      );
+    } else {
+      const nuevoTema: TemaCurso = {
+        id: Date.now(),
+        semana,
+        titulo,
+        detalle,
+        estado: "Pendiente",
+      };
+
+      setTemario((temasActuales) => [...temasActuales, nuevoTema]);
+    }
+
+    limpiarFormularioTema();
+  }
+
+  function alternarEstadoTema(id: number) {
+    setTemario((temasActuales) =>
+      temasActuales.map((tema) => {
+        if (tema.id !== id) {
+          return tema;
+        }
+
+        const siguienteEstado =
+          tema.estado === "Pendiente"
+            ? "En progreso"
+            : tema.estado === "En progreso"
+              ? "Completado"
+              : "Pendiente";
+
+        return {
+          ...tema,
+          estado: siguienteEstado,
+        };
+      }),
+    );
+  }
+
+  function eliminarTema(id: number) {
+    const temaSeleccionado = temario.find((tema) => tema.id === id);
+
+    if (!temaSeleccionado) {
+      return;
+    }
+
+    const confirmarEliminacion = window.confirm(
+      `¿Seguro que deseas eliminar el tema "${temaSeleccionado.titulo}"?`,
+    );
+
+    if (!confirmarEliminacion) {
+      return;
+    }
+
+    setTemario((temasActuales) =>
+      temasActuales.filter((tema) => tema.id !== id),
+    );
+
+    if (temaEditandoId === id) {
+      limpiarFormularioTema();
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 8. Funciones de notas
   // ------------------------------------------------------------
   function actualizarMeta(valor: string) {
     if (valor === "") {
@@ -418,7 +570,7 @@ function App() {
   }
 
   // ------------------------------------------------------------
-  // 8. Cálculos académicos
+  // 9. Cálculos académicos
   // ------------------------------------------------------------
   const notasEnFormulario =
     modoNotas === "simulacion" ? notasSimuladas : notasOficiales;
@@ -591,12 +743,15 @@ function App() {
     setMetaNota(cargarMetaCurso(curso));
 
     setActividades(cargarActividadesCurso(curso.id));
+    setTemario(cargarTemarioCurso(curso.id));
 
     // Limpia cualquier simulación o formulario anterior.
     setNotasSimuladas({});
     setModoNotas("oficial");
     setMostrarFormulario(false);
     setActividadEditandoId(null);
+    limpiarFormularioTema();
+    limpiarFormularioComponente();
 
     setVista("curso");
     setPestanaCurso("resumen");
@@ -719,6 +874,7 @@ function App() {
     localStorage.removeItem(`uniruta-curso-${cursoId}-notas`);
     localStorage.removeItem(`uniruta-curso-${cursoId}-meta`);
     localStorage.removeItem(`uniruta-curso-${cursoId}-actividades`);
+    localStorage.removeItem(`uniruta-curso-${cursoId}-temario`);
 
     if (cursoEditandoId === cursoId) {
       limpiarFormularioCurso();
@@ -731,10 +887,13 @@ function App() {
       setNotasOficiales(cargarNotasCurso(siguienteCurso));
       setMetaNota(cargarMetaCurso(siguienteCurso));
       setActividades(cargarActividadesCurso(siguienteCurso.id));
+      setTemario(cargarTemarioCurso(siguienteCurso.id));
       setNotasSimuladas({});
       setModoNotas("oficial");
       setMostrarFormulario(false);
       setActividadEditandoId(null);
+      limpiarFormularioTema();
+      limpiarFormularioComponente();
     }
   }
 
@@ -1143,6 +1302,14 @@ function App() {
 
             <button
               type="button"
+              className={pestanaCurso === "temario" ? "active-tab" : ""}
+              onClick={() => setPestanaCurso("temario")}
+            >
+              Temario
+            </button>
+
+            <button
+              type="button"
               className={pestanaCurso === "actividades" ? "active-tab" : ""}
               onClick={() => setPestanaCurso("actividades")}
             >
@@ -1189,6 +1356,13 @@ function App() {
                   <strong>{pendientes}</strong>
                   <span>Actividades pendientes</span>
                 </article>
+
+                <article className="summary-card">
+                  <strong>
+                    {temasCompletados}/{temario.length}
+                  </strong>
+                  <span>Temas completados</span>
+                </article>
               </div>
 
               {proximaActividad ? (
@@ -1220,6 +1394,155 @@ function App() {
                 ))}
               </section>
             </>
+          )}
+
+          {pestanaCurso === "temario" && (
+            <section className="activities-panel">
+              <div className="activities-header">
+                <div>
+                  <p>Contenido del sílabo</p>
+                  <h2>Temario por semanas</h2>
+                </div>
+
+                <button type="button" onClick={abrirFormularioNuevoTema}>
+                  + Agregar tema
+                </button>
+              </div>
+
+              <article className="next-activity">
+                <p>Avance del temario</p>
+                <h2>
+                  {temasCompletados} de {temario.length} temas completados
+                </h2>
+                <span>
+                  Registra los contenidos del curso para que UniRuta pueda
+                  organizar el estudio y relacionarlos con tus actividades.
+                </span>
+              </article>
+
+              {mostrarFormularioTema && (
+                <form className="activity-form" onSubmit={guardarTema}>
+                  <h3>{temaEditandoId !== null ? "Editar tema" : "Nuevo tema"}</h3>
+
+                  <div className="form-grid">
+                    <label className="form-field">
+                      <span>Semana</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={semanaTema}
+                        onChange={(event) => setSemanaTema(event.target.value)}
+                        placeholder="Ejemplo: 4"
+                        required
+                      />
+                    </label>
+
+                    <label className="form-field">
+                      <span>Tema principal</span>
+                      <input
+                        type="text"
+                        value={tituloTema}
+                        onChange={(event) => setTituloTema(event.target.value)}
+                        placeholder="Ejemplo: Primera ley de la termodinámica"
+                        required
+                      />
+                    </label>
+
+                    <label className="form-field">
+                      <span>Detalle opcional</span>
+                      <input
+                        type="text"
+                        value={detalleTema}
+                        onChange={(event) => setDetalleTema(event.target.value)}
+                        placeholder="Subtemas, capítulos o indicaciones"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="form-actions">
+                    <button
+                      type="button"
+                      className="cancel-button"
+                      onClick={limpiarFormularioTema}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button type="submit">
+                      {temaEditandoId !== null
+                        ? "Guardar cambios"
+                        : "Guardar tema"}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {temasOrdenados.length === 0 ? (
+                <article className="next-activity">
+                  <p>Temario</p>
+                  <h2>Todavía no hay temas registrados</h2>
+                  <span>
+                    Puedes copiarlos manualmente desde el sílabo. Más adelante
+                    la IA completará esta sección al leer el PDF.
+                  </span>
+                </article>
+              ) : (
+                <div className="activities-list">
+                  {temasOrdenados.map((tema) => (
+                    <article className="activity-card" key={tema.id}>
+                      <div>
+                        <h3>{tema.titulo}</h3>
+                        <p>{tema.detalle || "Sin detalle adicional"}</p>
+
+                        <div className="activity-meta">
+                          <span>Semana {tema.semana}</span>
+                          <span
+                            className={`status-badge ${
+                              tema.estado === "Completado"
+                                ? "completed-status"
+                                : ""
+                            }`}
+                          >
+                            {tema.estado}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="activity-actions">
+                        <button
+                          type="button"
+                          className="activity-status-button"
+                          onClick={() => alternarEstadoTema(tema.id)}
+                        >
+                          {tema.estado === "Pendiente"
+                            ? "Empezar"
+                            : tema.estado === "En progreso"
+                              ? "Completar"
+                              : "Reabrir"}
+                        </button>
+
+                        <button
+                          type="button"
+                          className="edit-activity-button"
+                          onClick={() => abrirFormularioEdicionTema(tema.id)}
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          className="delete-activity-button"
+                          onClick={() => eliminarTema(tema.id)}
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
           )}
 
           {pestanaCurso === "configuracion" && (
