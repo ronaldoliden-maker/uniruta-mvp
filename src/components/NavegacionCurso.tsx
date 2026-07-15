@@ -1,6 +1,7 @@
 export type PestanaCurso =
   | "resumen"
   | "silabo"
+  | "plan"
   | "temario"
   | "actividades"
   | "notas"
@@ -40,6 +41,18 @@ function NavegacionCurso({
       >
         Sílabo
       </button> 
+
+      <button
+        type="button"
+        className={
+          pestanaActiva === "plan"
+            ? "active-tab"
+            : ""
+        }
+        onClick={() => onCambiar("plan")}
+      >
+        Plan de estudio
+      </button>
 
       <button
         type="button"

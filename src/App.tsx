@@ -14,6 +14,7 @@ import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
 import PanelPrincipal from "./components/PanelPrincipal";
 import useNavegacion from "./hooks/useNavegacion";
 import ImportarSilaboCurso from "./components/ImportarSilaboCurso";
+import PlanEstudioCurso from "./components/PlanEstudioCurso";
 
 import type { PropuestaSilabo } from "./types/propuestaSilabo";
 
@@ -1242,6 +1243,16 @@ function App() {
               onGuardarPropuesta={
                 guardarPropuestaSilabo
               }
+            />
+          )}
+
+          {pestanaCurso === "plan" && (
+            <PlanEstudioCurso
+              key={cursoSeleccionado.id}
+              cursoId={cursoSeleccionado.id}
+              nombreCurso={cursoSeleccionado.nombre}
+              temario={temario}
+              actividades={actividades}
             />
           )}
 

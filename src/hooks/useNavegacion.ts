@@ -5,14 +5,15 @@ export type VistaApp =
   | "panel"
   | "curso";
 
-export type PestanaApp =
+  export type PestanaApp =
   | "resumen"
   | "silabo"
+  | "plan"
   | "temario"
   | "actividades"
   | "notas"
   | "configuracion";
-
+  
 function useNavegacion() {
   const [vista, setVista] =
     useState<VistaApp>("inicio");
