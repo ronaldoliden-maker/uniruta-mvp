@@ -1,6 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
+import type {
+  Actividad,
+} from './types/actividad'
+
+import {
+  cargarActividadesCurso,
+  guardarActividadesCurso,
+} from './utils/almacenamientoActividades'
+
 import { configuracionEDO } from './data/edoConfig'
 import { cursosIniciales } from './data/cursos'
 import {
@@ -17,96 +26,8 @@ import {
   guardarNotasCurso,
 } from './utils/almacenamientoCursos'
 
-type Actividad = {
-  id: number
-  nombre: string
-  tipo: string
-  semana: string
-  fecha: string
-  estado: 'No iniciada' | 'Completada'
-}
 
 type ModoNotas = 'oficial' | 'simulacion'
-
-const CLAVE_ACTIVIDADES = 
-  'uniruta-actividades'
-
-
-const actividadesIniciales: Actividad[] = [
-  {
-    id: 1,
-    nombre: 'EA1',
-    tipo: 'Evaluación en aula',
-    semana: 'Semana 2',
-    fecha: 'Fecha exacta pendiente',
-    estado: 'No iniciada',
-  },
-  {
-    id: 2,
-    nombre: 'RC1',
-    tipo: 'Resolución de casos',
-    semana: 'Semanas 3 y 4',
-    fecha: 'Entrega: 19/04/2026',
-    estado: 'No iniciada',
-  },
-  {
-    id: 3,
-    nombre: 'EA2',
-    tipo: 'Evaluación en aula',
-    semana: 'Semana 4',
-    fecha: 'Fecha exacta pendiente',
-    estado: 'No iniciada',
-  },
-  {
-    id: 4,
-    nombre: 'TA1',
-    tipo: 'Tarea',
-    semana: 'Semana 4',
-    fecha: 'Entrega: 14/04/2026',
-    estado: 'No iniciada',
-  },
-  {
-    id: 5,
-    nombre: 'EA3',
-    tipo: 'Evaluación en aula',
-    semana: 'Semana 6',
-    fecha: 'Fecha exacta pendiente',
-    estado: 'No iniciada',
-  },
-  {
-    id: 6,
-    nombre: 'RC2',
-    tipo: 'Resolución de casos',
-    semana: 'Semanas 6 y 7',
-    fecha: 'Entrega: 10/05/2026',
-    estado: 'No iniciada',
-  },
-  {
-    id: 7,
-    nombre: 'TA2',
-    tipo: 'Tarea',
-    semana: 'Semana 7',
-    fecha: 'Entrega: 05/05/2026',
-    estado: 'No iniciada',
-  },
-  {
-    id: 8,
-    nombre: 'P1',
-    tipo: 'Proyecto ABP - primera exposición',
-    semana: 'Semana 7',
-    fecha: 'Fecha exacta pendiente',
-    estado: 'No iniciada',
-  },
-  {
-    id: 9,
-    nombre: 'EP',
-    tipo: 'Examen parcial',
-    semana: 'Semana 7',
-    fecha: 'Fecha exacta pendiente',
-    estado: 'No iniciada',
-  },
-]
-
 
 
 function tieneNota(valor: number | string | undefined) {
@@ -148,19 +69,14 @@ function App() {
     null,
   )
 
-  const [actividades, setActividades] = useState<Actividad[]>(() => {
-    const actividadesGuardadas = localStorage.getItem(CLAVE_ACTIVIDADES)
-
-    if (actividadesGuardadas) {
-      try {
-        return JSON.parse(actividadesGuardadas) as Actividad[]
-      } catch {
-        localStorage.removeItem(CLAVE_ACTIVIDADES)
-      }
-    }
-
-    return actividadesIniciales
-  })
+  const [actividades, setActividades] =
+    useState<Actividad[]>(() =>
+      cursoInicial
+        ? cargarActividadesCurso(
+            cursoInicial.id,
+          )
+        : [],
+    )
 
   // ------------------------------------------------------------
   // 3. Notas oficiales y simulación
@@ -188,12 +104,21 @@ function App() {
   // ------------------------------------------------------------
   // 4. Persistencia
   // ------------------------------------------------------------
+  // Guarda las actividades utilizando el ID
+  // del curso actualmente seleccionado.
   useEffect(() => {
-    localStorage.setItem(
-      CLAVE_ACTIVIDADES,
-      JSON.stringify(actividades),
+    if (!cursoSeleccionadoId) {
+      return
+    }
+
+    guardarActividadesCurso(
+      cursoSeleccionadoId,
+      actividades,
     )
-  }, [actividades])
+  }, [
+    actividades,
+    cursoSeleccionadoId,
+  ])
 
   useEffect(() => {
     if (!cursoSeleccionadoId) {
@@ -577,33 +502,53 @@ function App() {
             : 'Desaprobado'
 
 // Información que se mostrará en las tarjetas del panel.
-// Por ahora EDO es el único curso que tiene notas y actividades conectadas.
-const cursosPanel = cursosIniciales.map((curso) => {
-  const esCursoEDO =
-    curso.id === configuracionEDO.id
+const cursosPanel =
+  cursosIniciales.map((curso) => {
+    const actividadesDelCurso =
+      curso.id === cursoSeleccionadoId
+        ? actividades
+        : cargarActividadesCurso(curso.id)
 
-  return {
-    id: curso.id,
-    nombre: curso.nombre,
-    codigo: curso.codigo ?? 'Sin código',
-    ciclo: curso.ciclo,
+    const actividadesOrdenadasCurso =
+      [...actividadesDelCurso].sort(
+        (actividadA, actividadB) =>
+          obtenerNumeroSemana(
+            actividadA.semana,
+          ) -
+          obtenerNumeroSemana(
+            actividadB.semana,
+          ),
+      )
 
-    promedio:
-      esCursoEDO && promedioActual !== null
-        ? promedioActual.toFixed(2)
-        : 'Sin notas',
+    const pendientesCurso =
+      actividadesDelCurso.filter(
+        (actividad) =>
+          actividad.estado !== 'Completada',
+      ).length
 
-    pendientes:
-      esCursoEDO
-        ? pendientes
-        : 0,
+    const proximaActividadCurso =
+      actividadesOrdenadasCurso.find(
+        (actividad) =>
+          actividad.estado !== 'Completada',
+      )
 
-    proximaActividad:
-      esCursoEDO && proximaActividad
-        ? proximaActividad.nombre
-        : 'Sin actividades pendientes',
-  }
-})
+    return {
+      id: curso.id,
+      nombre: curso.nombre,
+      codigo: curso.codigo ?? 'Sin código',
+      ciclo: curso.ciclo,
+
+      // Mantén aquí el cálculo de promedio
+      // que ya tienes funcionando.
+
+      pendientes: pendientesCurso,
+
+      proximaActividad:
+        proximaActividadCurso
+          ? proximaActividadCurso.nombre
+          : 'Sin actividades pendientes',
+    }
+  })
 
 function abrirCurso(cursoId: string) {
   const curso = cursosIniciales.find(
@@ -625,9 +570,15 @@ function abrirCurso(cursoId: string) {
     cargarMetaCurso(curso),
   )
 
-  // Toda simulación anterior se elimina al cambiar de curso.
+  setActividades(
+    cargarActividadesCurso(curso.id),
+  )
+
+  // Limpia cualquier simulación o formulario anterior.
   setNotasSimuladas({})
   setModoNotas('oficial')
+  setMostrarFormulario(false)
+  setActividadEditandoId(null)
 
   setVista('curso')
   setPestanaCurso('resumen')
