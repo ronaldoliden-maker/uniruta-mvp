@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import "./App.css";
 
 import Topbar from "./components/Topbar";
+import Inicio from "./components/Inicio";
 
 import type { ComponenteNota, Curso } from "./types/academico";
 
@@ -1077,18 +1078,9 @@ function App() {
       />
 
       {vista === "inicio" && (
-        <section className="welcome">
-          <p>Panel principal</p>
-          <h1>Organiza tu ciclo universitario</h1>
-          <p>
-            Controla tus cursos, actividades, calendario y notas desde un solo
-            lugar.
-          </p>
-
-          <button type="button" onClick={() => setVista("panel")}>
-            Comenzar
-          </button>
-        </section>
+        <Inicio
+          onComenzar={() => setVista("panel")}
+        />
       )}
 
       {vista === "panel" && (
