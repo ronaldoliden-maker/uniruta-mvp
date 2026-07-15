@@ -15,6 +15,13 @@ import PanelPrincipal from "./components/PanelPrincipal";
 import useNavegacion from "./hooks/useNavegacion";
 import ImportarSilaboCurso from "./components/ImportarSilaboCurso";
 
+import type { PropuestaSilabo } from "./types/propuestaSilabo";
+
+import {
+  combinarActividadesSinDuplicados,
+  convertirPropuestaSilabo,
+} from "./utils/convertirPropuestaSilabo";
+
 import NavegacionCurso from "./components/NavegacionCurso";
 
 import type { ComponenteNota, Curso } from "./types/academico";
@@ -1087,6 +1094,64 @@ function App() {
     setModoNotas("oficial");
   }
 
+  function guardarPropuestaSilabo(
+    propuesta: PropuestaSilabo,
+  ) {
+    if (!cursoSeleccionado) {
+      return false;
+    }
+  
+    const datosImportados =
+      convertirPropuestaSilabo(
+        propuesta,
+        cursoSeleccionado.id,
+      );
+  
+    const mensajeSemanas =
+      datosImportados.temasConSemanaAutomatica > 0
+        ? `\n\n${datosImportados.temasConSemanaAutomatica} temas no tenían semana y se asignarán consecutivamente desde la semana 1.`
+        : "";
+  
+    const confirmar = window.confirm(
+      `Se actualizarán el nombre, código, nota mínima, sistema de evaluación y temario de "${cursoSeleccionado.nombre}".\n\nLas notas oficiales actuales se borrarán porque cambiará el sistema de evaluación. Las actividades manuales se conservarán y se agregarán las evaluaciones con semana detectada.${mensajeSemanas}\n\n¿Deseas continuar?`,
+    );
+  
+    if (!confirmar) {
+      return false;
+    }
+  
+    setCursosRegistrados((cursosActuales) =>
+      cursosActuales.map((curso) =>
+        curso.id === cursoSeleccionado.id
+          ? {
+              ...curso,
+              nombre: datosImportados.nombreCurso,
+              codigo: datosImportados.codigoCurso,
+              notaMinima: datosImportados.notaMinima,
+              componentes:
+                datosImportados.componentes,
+            }
+          : curso,
+      ),
+    );
+  
+    setTemario(datosImportados.temas);
+  
+    setActividades((actividadesActuales) =>
+      combinarActividadesSinDuplicados(
+        actividadesActuales,
+        datosImportados.actividades,
+      ),
+    );
+  
+    setNotasOficiales({});
+    setNotasSimuladas({});
+    setModoNotas("oficial");
+    setPestanaCurso("resumen");
+  
+    return true;
+  }
+
   return (
     <main className="app">
       <Topbar
@@ -1174,6 +1239,9 @@ function App() {
           {pestanaCurso === "silabo" && (
             <ImportarSilaboCurso
               nombreCurso={cursoSeleccionado.nombre}
+              onGuardarPropuesta={
+                guardarPropuestaSilabo
+              }
             />
           )}
 

@@ -20,6 +20,9 @@ GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 type ImportarSilaboCursoProps = {
   nombreCurso: string;
+  onGuardarPropuesta: (
+    propuesta: PropuestaSilabo,
+  ) => boolean;
 };
 
 type ElementoTexto = {
@@ -54,6 +57,7 @@ function limpiarTextoPagina(texto: string) {
 
 function ImportarSilaboCurso({
   nombreCurso,
+  onGuardarPropuesta,
 }: ImportarSilaboCursoProps) {
   const inputArchivoRef =
     useRef<HTMLInputElement>(null);
@@ -74,6 +78,8 @@ function ImportarSilaboCurso({
     useState<PropuestaSilabo | null>(null);
   const [mensajePeso, setMensajePeso] =
     useState("");
+  const [mensajeGuardado, setMensajeGuardado] =
+    useState("");
 
   function limpiarResultado() {
     setTextoExtraido("");
@@ -81,6 +87,7 @@ function ImportarSilaboCurso({
     setProgreso("");
     setPropuesta(null);
     setMensajePeso("");
+    setMensajeGuardado("");
   }
 
   function seleccionarArchivo(
@@ -254,6 +261,7 @@ function ImportarSilaboCurso({
         propuestaDetectada.nombreCurso || nombreCurso,
     });
     setMensajePeso("");
+    setMensajeGuardado("");
   }
 
   function actualizarDatoCurso(
@@ -473,6 +481,46 @@ function ImportarSilaboCurso({
 
   const pesoTotalValido =
     Math.abs(pesoTotal - 100) < 0.001;
+
+  const notaMinimaNumerica = Number(
+    propuesta?.notaMinima ?? "",
+  );
+
+  const datosCursoValidos =
+    Boolean(propuesta?.nombreCurso.trim()) &&
+    Number.isFinite(notaMinimaNumerica) &&
+    notaMinimaNumerica >= 0 &&
+    notaMinimaNumerica <= 20;
+
+  const evaluacionesValidas =
+    Boolean(propuesta?.evaluaciones.length) &&
+    Boolean(
+      propuesta?.evaluaciones.every(
+        (evaluacion) =>
+          evaluacion.nombre.trim() &&
+          Number(evaluacion.peso) > 0,
+      ),
+    );
+
+  const puedeGuardar =
+    Boolean(propuesta) &&
+    pesoTotalValido &&
+    datosCursoValidos &&
+    evaluacionesValidas;
+
+  function guardarPropuesta() {
+    if (!propuesta || !puedeGuardar) {
+      return;
+    }
+
+    const guardada = onGuardarPropuesta(propuesta);
+
+    if (guardada) {
+      setMensajeGuardado(
+        "La propuesta se guardó correctamente en el curso.",
+      );
+    }
+  }
 
   return (
     <section className="activities-panel">
@@ -927,15 +975,27 @@ function ImportarSilaboCurso({
             )}
           </section>
 
-          <button type="button" disabled>
+          <button
+            type="button"
+            onClick={guardarPropuesta}
+            disabled={!puedeGuardar}
+          >
             Guardar propuesta en el curso
           </button>
 
-          <p className="notes-mode-message">
-            Todavía no se modificó el curso. En el siguiente
-            paso conectaremos este botón para guardar las
-            evaluaciones y el temario confirmados.
-          </p>
+          {!puedeGuardar && (
+            <p className="notes-mode-message">
+              Para guardar, completa el nombre del curso,
+              registra al menos una evaluación válida y
+              verifica que los pesos sumen exactamente 100 %.
+            </p>
+          )}
+
+          {mensajeGuardado && (
+            <p className="notes-mode-message">
+              {mensajeGuardado}
+            </p>
+          )}
         </section>
       )}
     </section>
