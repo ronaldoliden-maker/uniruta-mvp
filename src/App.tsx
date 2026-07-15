@@ -15,6 +15,7 @@ import PanelPrincipal from "./components/PanelPrincipal";
 import useNavegacion from "./hooks/useNavegacion";
 import ImportarSilaboCurso from "./components/ImportarSilaboCurso";
 import PlanEstudioCurso from "./components/PlanEstudioCurso";
+import AgendaSemanalGlobal from "./components/AgendaSemanalGlobal";
 
 import type { PropuestaSilabo } from "./types/propuestaSilabo";
 
@@ -788,6 +789,11 @@ function App() {
     abrirVistaCurso();
   }
 
+  function abrirPlanCurso(cursoId: string) {
+    abrirCurso(cursoId);
+    setPestanaCurso("plan");
+  }
+
   function limpiarFormularioCurso() {
     setNombreCursoNuevo("");
     setCodigoCursoNuevo("");
@@ -906,6 +912,9 @@ function App() {
     localStorage.removeItem(`uniruta-curso-${cursoId}-meta`);
     localStorage.removeItem(`uniruta-curso-${cursoId}-actividades`);
     localStorage.removeItem(`uniruta-curso-${cursoId}-temario`);
+    localStorage.removeItem(
+      `uniruta-curso-${cursoId}-plan-estudio`,
+    );
 
     if (cursoEditandoId === cursoId) {
       limpiarFormularioCurso();
@@ -1168,56 +1177,63 @@ function App() {
       )}
 
       {vista === "panel" && (
-        <PanelPrincipal
-          pendientesGlobales={
-            resumenActividadesGlobal.pendientes
-          }
-          atrasadasGlobales={0}
-          completadasGlobales={
-            resumenActividadesGlobal.completadas
-          }
+        <>
+          <PanelPrincipal
+            pendientesGlobales={
+              resumenActividadesGlobal.pendientes
+            }
+            atrasadasGlobales={0}
+            completadasGlobales={
+              resumenActividadesGlobal.completadas
+            }
 
-          cursos={cursosPanel}
+            cursos={cursosPanel}
 
-          mostrarFormularioCurso={
-            mostrarFormularioCurso
-          }
-          cursoEditandoId={cursoEditandoId}
+            mostrarFormularioCurso={
+              mostrarFormularioCurso
+            }
+            cursoEditandoId={cursoEditandoId}
 
-          nombreCurso={nombreCursoNuevo}
-          codigoCurso={codigoCursoNuevo}
-          cicloCurso={cicloCursoNuevo}
-          notaMinimaCurso={notaMinimaCursoNueva}
+            nombreCurso={nombreCursoNuevo}
+            codigoCurso={codigoCursoNuevo}
+            cicloCurso={cicloCursoNuevo}
+            notaMinimaCurso={notaMinimaCursoNueva}
 
-          onCambiarNombreCurso={
-            setNombreCursoNuevo
-          }
-          onCambiarCodigoCurso={
-            setCodigoCursoNuevo
-          }
-          onCambiarCicloCurso={
-            setCicloCursoNuevo
-          }
-          onCambiarNotaMinimaCurso={
-            setNotaMinimaCursoNueva
-          }
+            onCambiarNombreCurso={
+              setNombreCursoNuevo
+            }
+            onCambiarCodigoCurso={
+              setCodigoCursoNuevo
+            }
+            onCambiarCicloCurso={
+              setCicloCursoNuevo
+            }
+            onCambiarNotaMinimaCurso={
+              setNotaMinimaCursoNueva
+            }
 
-          onAbrirFormularioNuevoCurso={
-            abrirFormularioNuevoCurso
-          }
-          onGuardarCurso={agregarCurso}
-          onCancelarFormularioCurso={
-            limpiarFormularioCurso
-          }
+            onAbrirFormularioNuevoCurso={
+              abrirFormularioNuevoCurso
+            }
+            onGuardarCurso={agregarCurso}
+            onCancelarFormularioCurso={
+              limpiarFormularioCurso
+            }
 
-          onAbrirCurso={abrirCurso}
-          onEditarCurso={
-            abrirFormularioEdicionCurso
-          }
-          onEliminarCurso={eliminarCurso}
+            onAbrirCurso={abrirCurso}
+            onEditarCurso={
+              abrirFormularioEdicionCurso
+            }
+            onEliminarCurso={eliminarCurso}
 
-          onVolver={irAlInicio}
-        />
+            onVolver={irAlInicio}
+          />
+
+          <AgendaSemanalGlobal
+            cursos={cursosRegistrados}
+            onAbrirPlan={abrirPlanCurso}
+          />
+        </>
       )}
 
       {vista === "curso" && cursoSeleccionado && (
@@ -1248,13 +1264,13 @@ function App() {
 
           {pestanaCurso === "plan" && (
             <PlanEstudioCurso
-            key={cursoSeleccionado.id}
-            cursoId={cursoSeleccionado.id}
-            nombreCurso={cursoSeleccionado.nombre}
-            temario={temario}
-            actividades={actividades}
-            componentes={cursoSeleccionado.componentes}
-          />
+              key={cursoSeleccionado.id}
+              cursoId={cursoSeleccionado.id}
+              nombreCurso={cursoSeleccionado.nombre}
+              temario={temario}
+              actividades={actividades}
+              componentes={cursoSeleccionado.componentes}
+            />
           )}
 
           {pestanaCurso === "resumen" && (
