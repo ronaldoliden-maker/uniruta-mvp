@@ -13,6 +13,7 @@ import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
 import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
 import PanelPrincipal from "./components/PanelPrincipal";
 import useNavegacion from "./hooks/useNavegacion";
+import ImportarSilaboCurso from "./components/ImportarSilaboCurso";
 
 import NavegacionCurso from "./components/NavegacionCurso";
 
@@ -1169,6 +1170,12 @@ function App() {
             pestanaActiva={pestanaCurso}
             onCambiar={setPestanaCurso}
           />
+
+          {pestanaCurso === "silabo" && (
+            <ImportarSilaboCurso
+              nombreCurso={cursoSeleccionado.nombre}
+            />
+          )}
 
           {pestanaCurso === "resumen" && (
             <ResumenCurso

@@ -7,6 +7,7 @@ export type VistaApp =
 
 export type PestanaApp =
   | "resumen"
+  | "silabo"
   | "temario"
   | "actividades"
   | "notas"
