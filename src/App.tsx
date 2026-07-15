@@ -7,6 +7,7 @@ import ResumenGlobal from "./components/ResumenGlobal";
 import TarjetaCurso from "./components/TarjetaCurso";
 import EncabezadoCurso from "./components/EncabezadoCurso";
 import ResumenCurso from "./components/ResumenCurso";
+import TemarioCurso from "./components/TemarioCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1250,336 +1251,32 @@ function App() {
             />
           )}
 
-          {pestanaCurso === "temario" && (
-            <section className="activities-panel">
-              <div className="activities-header">
-                <div>
-                  <p>Contenido del sílabo</p>
-                  <h2>Temario por semanas</h2>
-                </div>
+{pestanaCurso === "temario" && (
+  <TemarioCurso
+    temario={temario}
+    temasOrdenados={temasOrdenados}
+    temasCompletados={temasCompletados}
 
-                <button type="button" onClick={abrirFormularioNuevoTema}>
-                  + Agregar tema
-                </button>
-              </div>
+    mostrarFormulario={mostrarFormularioTema}
+    temaEditandoId={temaEditandoId}
 
-              <article className="next-activity">
-                <p>Avance del temario</p>
-                <h2>
-                  {temasCompletados} de {temario.length} temas completados
-                </h2>
-                <span>
-                  Registra los contenidos del curso para que UniRuta pueda
-                  organizar el estudio y relacionarlos con tus actividades.
-                </span>
-              </article>
+    semanaTema={semanaTema}
+    tituloTema={tituloTema}
+    detalleTema={detalleTema}
 
-              {mostrarFormularioTema && (
-                <form className="activity-form" onSubmit={guardarTema}>
-                  <h3>{temaEditandoId !== null ? "Editar tema" : "Nuevo tema"}</h3>
+    onCambiarSemana={setSemanaTema}
+    onCambiarTitulo={setTituloTema}
+    onCambiarDetalle={setDetalleTema}
 
-                  <div className="form-grid">
-                    <label className="form-field">
-                      <span>Semana</span>
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={semanaTema}
-                        onChange={(event) => setSemanaTema(event.target.value)}
-                        placeholder="Ejemplo: 4"
-                        required
-                      />
-                    </label>
+    onAbrirNuevo={abrirFormularioNuevoTema}
+    onCancelar={limpiarFormularioTema}
+    onGuardar={guardarTema}
 
-                    <label className="form-field">
-                      <span>Tema principal</span>
-                      <input
-                        type="text"
-                        value={tituloTema}
-                        onChange={(event) => setTituloTema(event.target.value)}
-                        placeholder="Ejemplo: Primera ley de la termodinámica"
-                        required
-                      />
-                    </label>
-
-                    <label className="form-field">
-                      <span>Detalle opcional</span>
-                      <input
-                        type="text"
-                        value={detalleTema}
-                        onChange={(event) => setDetalleTema(event.target.value)}
-                        placeholder="Subtemas, capítulos o indicaciones"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="cancel-button"
-                      onClick={limpiarFormularioTema}
-                    >
-                      Cancelar
-                    </button>
-
-                    <button type="submit">
-                      {temaEditandoId !== null
-                        ? "Guardar cambios"
-                        : "Guardar tema"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {temasOrdenados.length === 0 ? (
-                <article className="next-activity">
-                  <p>Temario</p>
-                  <h2>Todavía no hay temas registrados</h2>
-                  <span>
-                    Puedes copiarlos manualmente desde el sílabo. Más adelante
-                    la IA completará esta sección al leer el PDF.
-                  </span>
-                </article>
-              ) : (
-                <div className="activities-list">
-                  {temasOrdenados.map((tema) => (
-                    <article className="activity-card" key={tema.id}>
-                      <div>
-                        <h3>{tema.titulo}</h3>
-                        <p>{tema.detalle || "Sin detalle adicional"}</p>
-
-                        <div className="activity-meta">
-                          <span>Semana {tema.semana}</span>
-                          <span
-                            className={`status-badge ${
-                              tema.estado === "Completado"
-                                ? "completed-status"
-                                : ""
-                            }`}
-                          >
-                            {tema.estado}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="activity-actions">
-                        <button
-                          type="button"
-                          className="activity-status-button"
-                          onClick={() => alternarEstadoTema(tema.id)}
-                        >
-                          {tema.estado === "Pendiente"
-                            ? "Empezar"
-                            : tema.estado === "En progreso"
-                              ? "Completar"
-                              : "Reabrir"}
-                        </button>
-
-                        <button
-                          type="button"
-                          className="edit-activity-button"
-                          onClick={() => abrirFormularioEdicionTema(tema.id)}
-                        >
-                          Editar
-                        </button>
-
-                        <button
-                          type="button"
-                          className="delete-activity-button"
-                          onClick={() => eliminarTema(tema.id)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {pestanaCurso === "configuracion" && (
-            <section className="activities-panel">
-              <div className="activities-header">
-                <div>
-                  <p>Configuración académica</p>
-                  <h2>Sistema de evaluación</h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={abrirFormularioNuevoComponente}
-                >
-                  + Agregar evaluación
-                </button>
-              </div>
-
-              <article className="next-activity">
-                <p>Peso total configurado</p>
-                <h2>{pesoTotalComponentes.toFixed(2)} % de 100 %</h2>
-                <span>
-                  {Math.abs(pesoTotalComponentes - 100) < 0.001
-                    ? "El sistema de evaluación está completo."
-                    : pesoTotalComponentes < 100
-                      ? `Todavía falta asignar ${(100 - pesoTotalComponentes).toFixed(
-                          2,
-                        )} %.`
-                      : "El peso total supera 100 %."}
-                </span>
-              </article>
-
-              <p className="notes-mode-message">
-                Este editor básico permite crear evaluaciones directas como
-                parciales, finales, prácticas y proyectos. Las fórmulas
-                compuestas existentes, como EC1 y EC2, se conservan.
-              </p>
-
-              {mostrarFormularioComponente && (
-                <form
-                  className="activity-form"
-                  onSubmit={guardarComponente}
-                >
-                  <h3>
-                    {componenteEditandoId
-                      ? "Editar componente"
-                      : "Nueva evaluación"}
-                  </h3>
-
-                  <div className="form-grid">
-                    <label className="form-field">
-                      <span>Nombre</span>
-                      <input
-                        type="text"
-                        value={nombreComponente}
-                        onChange={(event) =>
-                          setNombreComponente(event.target.value)
-                        }
-                        placeholder="Ejemplo: Examen parcial"
-                        required
-                      />
-                    </label>
-
-                    <label className="form-field">
-                      <span>Peso en la nota final (%)</span>
-                      <input
-                        type="number"
-                        min="0.01"
-                        max="100"
-                        step="0.01"
-                        value={pesoComponente}
-                        onChange={(event) =>
-                          setPesoComponente(event.target.value)
-                        }
-                        placeholder="Ejemplo: 30"
-                        required
-                      />
-                    </label>
-
-                    <label className="form-field">
-                      <span>Nota máxima</span>
-                      <input
-                        type="number"
-                        min="0.01"
-                        max="100"
-                        step="0.01"
-                        value={notaMaximaComponente}
-                        onChange={(event) =>
-                          setNotaMaximaComponente(event.target.value)
-                        }
-                        disabled={
-                          componenteEditandoId !== null &&
-                          cursoSeleccionado.componentes.find(
-                            (componente) =>
-                              componente.id === componenteEditandoId,
-                          )?.tipo !== "nota_directa"
-                        }
-                        required
-                      />
-                    </label>
-                  </div>
-
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="cancel-button"
-                      onClick={limpiarFormularioComponente}
-                    >
-                      Cancelar
-                    </button>
-
-                    <button type="submit">
-                      {componenteEditandoId
-                        ? "Guardar cambios"
-                        : "Guardar evaluación"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {cursoSeleccionado.componentes.length === 0 ? (
-                <article className="next-activity">
-                  <p>Sistema de evaluación</p>
-                  <h2>Todavía no hay evaluaciones registradas</h2>
-                  <span>
-                    Agrega los componentes indicados en el sílabo del curso.
-                  </span>
-                </article>
-              ) : (
-                <div className="activities-list">
-                  {cursoSeleccionado.componentes.map((componente) => (
-                    <article className="activity-card" key={componente.id}>
-                      <div>
-                        <h3>{componente.nombre}</h3>
-                        <p>
-                          {componente.tipo === "nota_directa"
-                            ? "Evaluación directa"
-                            : "Fórmula compuesta"}
-                        </p>
-
-                        <div className="activity-meta">
-                          <span>Peso: {componente.peso ?? 0} %</span>
-
-                          {componente.tipo === "nota_directa" && (
-                            <span>
-                              Nota máxima: {componente.notaMaxima ?? 20}
-                            </span>
-                          )}
-
-                          {componente.hijos &&
-                            componente.hijos.length > 0 && (
-                              <span>
-                                {componente.hijos.length} componentes internos
-                              </span>
-                            )}
-                        </div>
-                      </div>
-
-                      <div className="activity-actions">
-                        <button
-                          type="button"
-                          className="edit-activity-button"
-                          onClick={() =>
-                            abrirFormularioEdicionComponente(componente.id)
-                          }
-                        >
-                          Editar
-                        </button>
-
-                        <button
-                          type="button"
-                          className="delete-activity-button"
-                          onClick={() => eliminarComponente(componente.id)}
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+    onCambiarEstado={alternarEstadoTema}
+    onEditar={abrirFormularioEdicionTema}
+    onEliminar={eliminarTema}
+  />
+)}
 
           {pestanaCurso === "actividades" && (
             <section className="activities-panel">
