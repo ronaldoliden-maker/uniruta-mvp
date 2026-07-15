@@ -3,7 +3,6 @@ import "./App.css";
 
 import Topbar from "./components/Topbar";
 import Inicio from "./components/Inicio";
-import ResumenGlobal from "./components/ResumenGlobal";
 import EncabezadoCurso from "./components/EncabezadoCurso";
 import ResumenCurso from "./components/ResumenCurso";
 import TemarioCurso from "./components/TemarioCurso";
@@ -12,7 +11,7 @@ import ResumenNotasCurso from "./components/ResumenNotasCurso";
 import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
 import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
 import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
-import ListaCursos from "./components/ListaCursos";
+import PanelPrincipal from "./components/PanelPrincipal";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1099,53 +1098,56 @@ function App() {
       )}
 
       {vista === "panel" && (
-        <section className="welcome">
-          <p>Semana actual</p>
-          <h1>Semana 1 de 16</h1>
-          
-          <p>
-            Aquí aparecerá el resumen de tus actividades, cursos y evaluaciones.
-          </p>
+        <PanelPrincipal
+          pendientesGlobales={
+            resumenActividadesGlobal.pendientes
+          }
+          atrasadasGlobales={0}
+          completadasGlobales={
+            resumenActividadesGlobal.completadas
+          }
 
-          <ResumenGlobal
-            pendientes={resumenActividadesGlobal.pendientes}
-            atrasadas={0}
-            completadas={resumenActividadesGlobal.completadas}
-          />
+          cursos={cursosPanel}
 
-          <ListaCursos
-            cursos={cursosPanel}
+          mostrarFormularioCurso={
+            mostrarFormularioCurso
+          }
+          cursoEditandoId={cursoEditandoId}
 
-            mostrarFormulario={mostrarFormularioCurso}
-            cursoEditandoId={cursoEditandoId}
+          nombreCurso={nombreCursoNuevo}
+          codigoCurso={codigoCursoNuevo}
+          cicloCurso={cicloCursoNuevo}
+          notaMinimaCurso={notaMinimaCursoNueva}
 
-            nombreCurso={nombreCursoNuevo}
-            codigoCurso={codigoCursoNuevo}
-            cicloCurso={cicloCursoNuevo}
-            notaMinimaCurso={notaMinimaCursoNueva}
+          onCambiarNombreCurso={
+            setNombreCursoNuevo
+          }
+          onCambiarCodigoCurso={
+            setCodigoCursoNuevo
+          }
+          onCambiarCicloCurso={
+            setCicloCursoNuevo
+          }
+          onCambiarNotaMinimaCurso={
+            setNotaMinimaCursoNueva
+          }
 
-            onCambiarNombre={setNombreCursoNuevo}
-            onCambiarCodigo={setCodigoCursoNuevo}
-            onCambiarCiclo={setCicloCursoNuevo}
-            onCambiarNotaMinima={setNotaMinimaCursoNueva}
+          onAbrirFormularioNuevoCurso={
+            abrirFormularioNuevoCurso
+          }
+          onGuardarCurso={agregarCurso}
+          onCancelarFormularioCurso={
+            limpiarFormularioCurso
+          }
 
-            onAbrirFormularioNuevo={abrirFormularioNuevoCurso}
-            onGuardarCurso={agregarCurso}
-            onCancelarFormulario={limpiarFormularioCurso}
+          onAbrirCurso={abrirCurso}
+          onEditarCurso={
+            abrirFormularioEdicionCurso
+          }
+          onEliminarCurso={eliminarCurso}
 
-            onAbrirCurso={abrirCurso}
-            onEditarCurso={abrirFormularioEdicionCurso}
-            onEliminarCurso={eliminarCurso}
-          />
-
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={() => setVista("inicio")}
-          >
-            Volver
-          </button>
-        </section>
+          onVolver={() => setVista("inicio")}
+        />
       )}
 
       {vista === "curso" && cursoSeleccionado && (
