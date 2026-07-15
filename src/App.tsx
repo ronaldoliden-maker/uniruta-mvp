@@ -9,6 +9,7 @@ import EncabezadoCurso from "./components/EncabezadoCurso";
 import ResumenCurso from "./components/ResumenCurso";
 import TemarioCurso from "./components/TemarioCurso";
 import ActividadesCurso from "./components/ActividadesCurso";
+import ResumenNotasCurso from "./components/ResumenNotasCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1308,45 +1309,14 @@ function App() {
 
           {pestanaCurso === "notas" && (
             <section className="grades-panel">
-              <div className="grades-heading">
-                <p>Calculadora del curso</p>
-                <h2>Sistema de evaluación</h2>
-                <span>
-                  Nota final ={" "}
-                  {cursoSeleccionado?.componentes
-                    .map(
-                      (componente) =>
-                        `${componente.peso ?? 0} % ${componente.nombre}`,
-                    )
-                    .join(" + ")}
-                </span>
-              </div>
-
-              <div className="final-grade-grid">
-                <article className="final-grade-card">
-                  <span>
-                    {modoNotas === "simulacion"
-                      ? "Nota final simulada"
-                      : "Nota final provisional"}
-                  </span>
-                  <strong>{notaFinalMostrada.toFixed(2)}</strong>
-                </article>
-
-                <article className="final-grade-card">
-                  <span>Nota final redondeada</span>
-                  <strong>{notaFinalRedondeada}</strong>
-                </article>
-
-                <article className="final-grade-card">
-                  <span>Porcentaje oficialmente evaluado</span>
-                  <strong>{porcentajeEvaluado.toFixed(2)} %</strong>
-                </article>
-
-                <article className="final-grade-card">
-                  <span>Estado</span>
-                  <strong className="grade-status">{estadoMostrado}</strong>
-                </article>
-              </div>
+              <ResumenNotasCurso
+                curso={cursoSeleccionado}
+                esSimulacion={modoNotas === "simulacion"}
+                notaFinalMostrada={notaFinalMostrada}
+                notaFinalRedondeada={notaFinalRedondeada}
+                porcentajeEvaluado={porcentajeEvaluado}
+                estadoMostrado={estadoMostrado}
+              />
 
               <section className="goal-calculator">
                 <div className="goal-heading">
