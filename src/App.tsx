@@ -12,6 +12,7 @@ import ActividadesCurso from "./components/ActividadesCurso";
 import ResumenNotasCurso from "./components/ResumenNotasCurso";
 import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
 import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
+import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -633,8 +634,9 @@ function App() {
 
     const nota = Number(valor);
     const peso = pesosEvaluaciones[evaluacion.id] ?? 0;
+    const notaMaxima = evaluacion.notaMaxima ?? 20;
 
-    const aporte = (nota / evaluacion.notaMaxima) * 20 * (peso / 100);
+    const aporte = (nota / notaMaxima) * 20 * (peso / 100);
 
     return total + aporte;
   }, 0);
@@ -717,8 +719,9 @@ function App() {
 
         const nota = Number(valor);
         const peso = pesosCurso[evaluacion.id] ?? 0;
+        const notaMaxima = evaluacion.notaMaxima ?? 20;
 
-        return total + (nota / evaluacion.notaMaxima) * 20 * (peso / 100);
+        return total + (nota / notaMaxima) * 20 * (peso / 100);
       },
       0,
     );
@@ -1092,9 +1095,7 @@ function App() {
       />
 
       {vista === "inicio" && (
-        <Inicio
-          onComenzar={() => setVista("panel")}
-        />
+        <Inicio onComenzar={() => setVista("panel")} />
       )}
 
       {vista === "panel" && (
@@ -1115,10 +1116,7 @@ function App() {
             <div className="courses-section-heading">
               <h2>Mis cursos</h2>
 
-              <button
-                type="button"
-                onClick={abrirFormularioNuevoCurso}
-              >
+              <button type="button" onClick={abrirFormularioNuevoCurso}>
                 + Agregar curso
               </button>
             </div>
@@ -1255,54 +1253,44 @@ function App() {
             />
           )}
 
-{pestanaCurso === "temario" && (
-  <TemarioCurso
-    temario={temario}
-    temasOrdenados={temasOrdenados}
-    temasCompletados={temasCompletados}
-
-    mostrarFormulario={mostrarFormularioTema}
-    temaEditandoId={temaEditandoId}
-
-    semanaTema={semanaTema}
-    tituloTema={tituloTema}
-    detalleTema={detalleTema}
-
-    onCambiarSemana={setSemanaTema}
-    onCambiarTitulo={setTituloTema}
-    onCambiarDetalle={setDetalleTema}
-
-    onAbrirNuevo={abrirFormularioNuevoTema}
-    onCancelar={limpiarFormularioTema}
-    onGuardar={guardarTema}
-
-    onCambiarEstado={alternarEstadoTema}
-    onEditar={abrirFormularioEdicionTema}
-    onEliminar={eliminarTema}
-  />
-)}
+          {pestanaCurso === "temario" && (
+            <TemarioCurso
+              temario={temario}
+              temasOrdenados={temasOrdenados}
+              temasCompletados={temasCompletados}
+              mostrarFormulario={mostrarFormularioTema}
+              temaEditandoId={temaEditandoId}
+              semanaTema={semanaTema}
+              tituloTema={tituloTema}
+              detalleTema={detalleTema}
+              onCambiarSemana={setSemanaTema}
+              onCambiarTitulo={setTituloTema}
+              onCambiarDetalle={setDetalleTema}
+              onAbrirNuevo={abrirFormularioNuevoTema}
+              onCancelar={limpiarFormularioTema}
+              onGuardar={guardarTema}
+              onCambiarEstado={alternarEstadoTema}
+              onEditar={abrirFormularioEdicionTema}
+              onEliminar={eliminarTema}
+            />
+          )}
 
           {pestanaCurso === "actividades" && (
             <ActividadesCurso
               actividades={actividadesOrdenadas}
-
               mostrarFormulario={mostrarFormulario}
               actividadEditandoId={actividadEditandoId}
-
               nombreActividad={nombreActividad}
               tipoActividad={tipoActividad}
               semanaActividad={semanaActividad}
               fechaActividad={fechaActividad}
-
               onCambiarNombre={setNombreActividad}
               onCambiarTipo={setTipoActividad}
               onCambiarSemana={setSemanaActividad}
               onCambiarFecha={setFechaActividad}
-
               onAbrirNueva={abrirFormularioNuevo}
               onCancelar={limpiarFormulario}
               onGuardar={agregarActividad}
-
               onCambiarEstado={alternarEstadoActividad}
               onEditar={abrirFormularioEdicion}
               onEliminar={eliminarActividad}
@@ -1332,20 +1320,37 @@ function App() {
               <CalculadoraNotasCurso
                 modo={modoNotas}
                 evaluaciones={evaluacionesDinamicas}
-
                 notasOficiales={notasOficiales}
                 notasEnFormulario={notasEnFormulario}
-
                 notaFinalOficial={notaFinalOficial}
                 notaFinalMostrada={notaFinalMostrada}
                 diferenciaSimulada={diferenciaSimulada}
-
                 onActivarOficial={activarModoOficial}
                 onActivarSimulacion={activarModoSimulacion}
                 onActualizarNota={actualizarNota}
                 onRestablecerSimulacion={restablecerSimulacion}
               />
             </section>
+          )}
+
+          {pestanaCurso === "configuracion" && (
+            <SistemaEvaluacionCurso
+              componentes={cursoSeleccionado.componentes}
+              pesoTotal={pesoTotalComponentes}
+              mostrarFormulario={mostrarFormularioComponente}
+              componenteEditandoId={componenteEditandoId}
+              nombreComponente={nombreComponente}
+              pesoComponente={pesoComponente}
+              notaMaximaComponente={notaMaximaComponente}
+              onCambiarNombre={setNombreComponente}
+              onCambiarPeso={setPesoComponente}
+              onCambiarNotaMaxima={setNotaMaximaComponente}
+              onAbrirNuevo={abrirFormularioNuevoComponente}
+              onCancelar={limpiarFormularioComponente}
+              onGuardar={guardarComponente}
+              onEditar={abrirFormularioEdicionComponente}
+              onEliminar={eliminarComponente}
+            />
           )}
         </section>
       )}
