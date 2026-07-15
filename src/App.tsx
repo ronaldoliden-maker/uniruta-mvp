@@ -3,6 +3,7 @@ import "./App.css";
 
 import Topbar from "./components/Topbar";
 import Inicio from "./components/Inicio";
+import ResumenGlobal from "./components/ResumenGlobal";
 
 import type { ComponenteNota, Curso } from "./types/academico";
 
@@ -1091,24 +1092,11 @@ function App() {
             Aquí aparecerá el resumen de tus actividades, cursos y evaluaciones.
           </p>
 
-          <div className="summary-grid">
-            <article className="summary-card">
-              <strong>{resumenActividadesGlobal.pendientes}</strong>
-
-              <span>Pendientes</span>
-            </article>
-
-            <article className="summary-card">
-              <strong>0</strong>
-              <span>Atrasadas</span>
-            </article>
-
-            <article className="summary-card">
-              <strong>{resumenActividadesGlobal.completadas}</strong>
-
-              <span>Completadas</span>
-            </article>
-          </div>
+          <ResumenGlobal
+            pendientes={resumenActividadesGlobal.pendientes}
+            atrasadas={0}
+            completadas={resumenActividadesGlobal.completadas}
+          />
 
           <section className="courses-section">
             <div className="courses-section-heading">
