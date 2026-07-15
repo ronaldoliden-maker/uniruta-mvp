@@ -4,7 +4,6 @@ import "./App.css";
 import Topbar from "./components/Topbar";
 import Inicio from "./components/Inicio";
 import ResumenGlobal from "./components/ResumenGlobal";
-import TarjetaCurso from "./components/TarjetaCurso";
 import EncabezadoCurso from "./components/EncabezadoCurso";
 import ResumenCurso from "./components/ResumenCurso";
 import TemarioCurso from "./components/TemarioCurso";
@@ -13,7 +12,7 @@ import ResumenNotasCurso from "./components/ResumenNotasCurso";
 import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
 import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
 import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
-import FormularioCurso from "./components/FormularioCurso";
+import ListaCursos from "./components/ListaCursos";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1103,6 +1102,7 @@ function App() {
         <section className="welcome">
           <p>Semana actual</p>
           <h1>Semana 1 de 16</h1>
+          
           <p>
             Aquí aparecerá el resumen de tus actividades, cursos y evaluaciones.
           </p>
@@ -1113,43 +1113,30 @@ function App() {
             completadas={resumenActividadesGlobal.completadas}
           />
 
-          <section className="courses-section">
-            <div className="courses-section-heading">
-              <h2>Mis cursos</h2>
+          <ListaCursos
+            cursos={cursosPanel}
 
-              <button type="button" onClick={abrirFormularioNuevoCurso}>
-                + Agregar curso
-              </button>
-            </div>
+            mostrarFormulario={mostrarFormularioCurso}
+            cursoEditandoId={cursoEditandoId}
 
-            {mostrarFormularioCurso && (
-              <FormularioCurso
-                cursoEditandoId={cursoEditandoId}
-                nombre={nombreCursoNuevo}
-                codigo={codigoCursoNuevo}
-                ciclo={cicloCursoNuevo}
-                notaMinima={notaMinimaCursoNueva}
-                onCambiarNombre={setNombreCursoNuevo}
-                onCambiarCodigo={setCodigoCursoNuevo}
-                onCambiarCiclo={setCicloCursoNuevo}
-                onCambiarNotaMinima={setNotaMinimaCursoNueva}
-                onGuardar={agregarCurso}
-                onCancelar={limpiarFormularioCurso}
-              />
-            )}
+            nombreCurso={nombreCursoNuevo}
+            codigoCurso={codigoCursoNuevo}
+            cicloCurso={cicloCursoNuevo}
+            notaMinimaCurso={notaMinimaCursoNueva}
 
-            <div className="course-list">
-              {cursosPanel.map((curso) => (
-                <TarjetaCurso
-                  key={curso.id}
-                  curso={curso}
-                  onAbrir={abrirCurso}
-                  onEditar={abrirFormularioEdicionCurso}
-                  onEliminar={eliminarCurso}
-                />
-              ))}
-            </div>
-          </section>
+            onCambiarNombre={setNombreCursoNuevo}
+            onCambiarCodigo={setCodigoCursoNuevo}
+            onCambiarCiclo={setCicloCursoNuevo}
+            onCambiarNotaMinima={setNotaMinimaCursoNueva}
+
+            onAbrirFormularioNuevo={abrirFormularioNuevoCurso}
+            onGuardarCurso={agregarCurso}
+            onCancelarFormulario={limpiarFormularioCurso}
+
+            onAbrirCurso={abrirCurso}
+            onEditarCurso={abrirFormularioEdicionCurso}
+            onEliminarCurso={eliminarCurso}
+          />
 
           <button
             type="button"
