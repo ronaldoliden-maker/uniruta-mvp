@@ -5,6 +5,7 @@ import Topbar from "./components/Topbar";
 import Inicio from "./components/Inicio";
 import ResumenGlobal from "./components/ResumenGlobal";
 import TarjetaCurso from "./components/TarjetaCurso";
+import EncabezadoCurso from "./components/EncabezadoCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1229,19 +1230,7 @@ function App() {
             ← Volver al panel
           </button>
 
-          <div className="course-heading">
-            <p>Curso</p>
-
-            <h1>{cursoSeleccionado.nombre}</h1>
-
-            <span>
-              {cursoSeleccionado.estado === "en_curso"
-                ? "En curso"
-                : cursoSeleccionado.estado === "completado"
-                  ? "Completado"
-                  : "Archivado"}
-            </span>
-          </div>
+          <EncabezadoCurso curso={cursoSeleccionado} />
 
           <NavegacionCurso
             pestanaActiva={pestanaCurso}
