@@ -11,6 +11,11 @@ export type EstadoSesionEstudio =
   | "Pendiente"
   | "Completada";
 
+export type PrioridadSesion =
+  | "Alta"
+  | "Media"
+  | "Baja";
+
 export type SesionEstudio = {
   id: string;
   dia: DiaSemana;
@@ -18,10 +23,13 @@ export type SesionEstudio = {
   titulo: string;
   detalle: string;
   origen: "Actividad" | "Temario";
+  prioridad: PrioridadSesion;
+  motivoPrioridad: string;
   estado: EstadoSesionEstudio;
 };
 
 export type ConfiguracionPlanEstudio = {
+  semanaActual: number;
   horasSemanales: number;
   duracionSesion: number;
   diasDisponibles: DiaSemana[];

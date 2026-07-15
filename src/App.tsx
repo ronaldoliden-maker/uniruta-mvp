@@ -1248,12 +1248,13 @@ function App() {
 
           {pestanaCurso === "plan" && (
             <PlanEstudioCurso
-              key={cursoSeleccionado.id}
-              cursoId={cursoSeleccionado.id}
-              nombreCurso={cursoSeleccionado.nombre}
-              temario={temario}
-              actividades={actividades}
-            />
+            key={cursoSeleccionado.id}
+            cursoId={cursoSeleccionado.id}
+            nombreCurso={cursoSeleccionado.nombre}
+            temario={temario}
+            actividades={actividades}
+            componentes={cursoSeleccionado.componentes}
+          />
           )}
 
           {pestanaCurso === "resumen" && (

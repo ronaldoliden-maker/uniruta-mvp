@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 
+import type {
+  ComponenteNota,
+} from "../types/academico";
 import type { Actividad } from "../types/actividad";
 import type {
   ConfiguracionPlanEstudio,
@@ -20,6 +23,7 @@ type PlanEstudioCursoProps = {
   nombreCurso: string;
   temario: TemaCurso[];
   actividades: Actividad[];
+  componentes: ComponenteNota[];
 };
 
 const dias: DiaSemana[] = [
@@ -37,19 +41,23 @@ function PlanEstudioCurso({
   nombreCurso,
   temario,
   actividades,
+  componentes,
 }: PlanEstudioCursoProps) {
-  const planInicial = cargarPlanEstudio(cursoId);
+  const planInicial =
+    cargarPlanEstudio(cursoId);
 
   const [configuracion, setConfiguracion] =
     useState<ConfiguracionPlanEstudio>(
       planInicial.configuracion,
     );
 
-  const [sesiones, setSesiones] = useState<
-    SesionEstudio[]
-  >(planInicial.sesiones);
+  const [sesiones, setSesiones] =
+    useState<SesionEstudio[]>(
+      planInicial.sesiones,
+    );
 
-  const [mensaje, setMensaje] = useState("");
+  const [mensaje, setMensaje] =
+    useState("");
 
   useEffect(() => {
     guardarPlanEstudio(cursoId, {
@@ -57,6 +65,23 @@ function PlanEstudioCurso({
       sesiones,
     });
   }, [cursoId, configuracion, sesiones]);
+
+  function cambiarSemanaActual(
+    valor: string,
+  ) {
+    const numero = Number(valor);
+
+    if (
+      Number.isInteger(numero) &&
+      numero >= 1 &&
+      numero <= 20
+    ) {
+      setConfiguracion((actual) => ({
+        ...actual,
+        semanaActual: numero,
+      }));
+    }
+  }
 
   function cambiarHoras(valor: string) {
     const numero = Number(valor);
@@ -73,10 +98,14 @@ function PlanEstudioCurso({
     }
   }
 
-  function cambiarDuracion(valor: string) {
+  function cambiarDuracion(
+    valor: string,
+  ) {
     const numero = Number(valor);
 
-    if ([30, 45, 60, 90].includes(numero)) {
+    if (
+      [30, 45, 60, 90].includes(numero)
+    ) {
       setConfiguracion((actual) => ({
         ...actual,
         duracionSesion: numero,
@@ -96,14 +125,18 @@ function PlanEstudioCurso({
               (diaGuardado) =>
                 diaGuardado !== dia,
             )
-          : [...actual.diasDisponibles, dia],
+          : [
+              ...actual.diasDisponibles,
+              dia,
+            ],
       };
     });
   }
 
   function generarPlan() {
     if (
-      configuracion.diasDisponibles.length === 0
+      configuracion.diasDisponibles
+        .length === 0
     ) {
       setMensaje(
         "Selecciona al menos un día disponible.",
@@ -111,12 +144,14 @@ function PlanEstudioCurso({
       return;
     }
 
-    const planGenerado = generarPlanEstudio(
-      cursoId,
-      temario,
-      actividades,
-      configuracion,
-    );
+    const planGenerado =
+      generarPlanEstudio(
+        cursoId,
+        temario,
+        actividades,
+        componentes,
+        configuracion,
+      );
 
     if (planGenerado.length === 0) {
       setMensaje(
@@ -127,7 +162,7 @@ function PlanEstudioCurso({
 
     setSesiones(planGenerado);
     setMensaje(
-      `Se generaron ${planGenerado.length} sesiones para ${nombreCurso}.`,
+      `Se generaron ${planGenerado.length} sesiones priorizadas para ${nombreCurso}.`,
     );
   }
 
@@ -140,7 +175,8 @@ function PlanEstudioCurso({
           ? {
               ...sesion,
               estado:
-                sesion.estado === "Completada"
+                sesion.estado ===
+                "Completada"
                   ? "Pendiente"
                   : "Completada",
             }
@@ -162,16 +198,23 @@ function PlanEstudioCurso({
     setMensaje("Plan eliminado.");
   }
 
-  const sesionesCompletadas = sesiones.filter(
-    (sesion) =>
-      sesion.estado === "Completada",
-  ).length;
+  const sesionesCompletadas =
+    sesiones.filter(
+      (sesion) =>
+        sesion.estado === "Completada",
+    ).length;
+
+  const sesionesAltaPrioridad =
+    sesiones.filter(
+      (sesion) =>
+        sesion.prioridad === "Alta",
+    ).length;
 
   return (
     <section className="activities-panel">
       <div className="activities-header">
         <div>
-          <p>Organización semanal</p>
+          <p>Organización inteligente</p>
           <h2>Plan de estudio</h2>
         </div>
 
@@ -179,7 +222,7 @@ function PlanEstudioCurso({
           type="button"
           onClick={generarPlan}
         >
-          Generar plan
+          Generar plan inteligente
         </button>
       </div>
 
@@ -187,18 +230,39 @@ function PlanEstudioCurso({
         <p>Curso seleccionado</p>
         <h2>{nombreCurso}</h2>
         <span>
-          UniRuta prioriza primero las actividades
-          pendientes y después los temas todavía no
-          completados.
+          UniRuta prioriza cercanía de la
+          evaluación, peso en la nota final y
+          temas atrasados.
         </span>
       </article>
 
       <section className="activity-form">
-        <h3>Disponibilidad semanal</h3>
+        <h3>Configuración semanal</h3>
 
         <div className="form-grid">
           <label className="form-field">
-            <span>Horas disponibles por semana</span>
+            <span>Semana actual</span>
+
+            <input
+              type="number"
+              min="1"
+              max="20"
+              step="1"
+              value={
+                configuracion.semanaActual
+              }
+              onChange={(event) =>
+                cambiarSemanaActual(
+                  event.target.value,
+                )
+              }
+            />
+          </label>
+
+          <label className="form-field">
+            <span>
+              Horas disponibles por semana
+            </span>
 
             <input
               type="number"
@@ -209,13 +273,17 @@ function PlanEstudioCurso({
                 configuracion.horasSemanales
               }
               onChange={(event) =>
-                cambiarHoras(event.target.value)
+                cambiarHoras(
+                  event.target.value,
+                )
               }
             />
           </label>
 
           <label className="form-field">
-            <span>Duración de cada sesión</span>
+            <span>
+              Duración de cada sesión
+            </span>
 
             <select
               value={
@@ -227,10 +295,18 @@ function PlanEstudioCurso({
                 )
               }
             >
-              <option value="30">30 minutos</option>
-              <option value="45">45 minutos</option>
-              <option value="60">60 minutos</option>
-              <option value="90">90 minutos</option>
+              <option value="30">
+                30 minutos
+              </option>
+              <option value="45">
+                45 minutos
+              </option>
+              <option value="60">
+                60 minutos
+              </option>
+              <option value="90">
+                90 minutos
+              </option>
             </select>
           </label>
         </div>
@@ -248,7 +324,9 @@ function PlanEstudioCurso({
                 checked={configuracion.diasDisponibles.includes(
                   dia,
                 )}
-                onChange={() => alternarDia(dia)}
+                onChange={() =>
+                  alternarDia(dia)
+                }
               />
             </label>
           ))}
@@ -264,10 +342,12 @@ function PlanEstudioCurso({
       {sesiones.length === 0 ? (
         <article className="next-activity">
           <p>Plan semanal</p>
-          <h2>Todavía no hay sesiones generadas</h2>
+          <h2>
+            Todavía no hay sesiones generadas
+          </h2>
           <span>
-            Configura tus horas y días disponibles,
-            luego pulsa Generar plan.
+            Indica la semana actual, configura
+            tu disponibilidad y genera el plan.
           </span>
         </article>
       ) : (
@@ -276,11 +356,12 @@ function PlanEstudioCurso({
             <p>Avance del plan</p>
             <h2>
               {sesionesCompletadas} de{" "}
-              {sesiones.length} sesiones completadas
+              {sesiones.length} sesiones
+              completadas
             </h2>
             <span>
-              El plan se guarda automáticamente para
-              este curso.
+              {sesionesAltaPrioridad} sesiones
+              tienen prioridad alta.
             </span>
           </article>
 
@@ -291,15 +372,39 @@ function PlanEstudioCurso({
                 key={sesion.id}
               >
                 <div>
-                  <h3>{sesion.titulo}</h3>
+                  <h3>
+                    {sesion.titulo}
+                  </h3>
+
                   <p>{sesion.detalle}</p>
+
+                  <p>
+                    <strong>
+                      Prioridad{" "}
+                      {sesion.prioridad}:
+                    </strong>{" "}
+                    {sesion.motivoPrioridad}
+                  </p>
 
                   <div className="activity-meta">
                     <span>{sesion.dia}</span>
+
                     <span>
-                      {sesion.duracionMinutos} minutos
+                      {
+                        sesion.duracionMinutos
+                      }{" "}
+                      minutos
                     </span>
-                    <span>{sesion.origen}</span>
+
+                    <span>
+                      {sesion.origen}
+                    </span>
+
+                    <span>
+                      Prioridad{" "}
+                      {sesion.prioridad}
+                    </span>
+
                     <span
                       className={`status-badge ${
                         sesion.estado ===
@@ -323,7 +428,8 @@ function PlanEstudioCurso({
                       )
                     }
                   >
-                    {sesion.estado === "Completada"
+                    {sesion.estado ===
+                    "Completada"
                       ? "Reabrir"
                       : "Completar"}
                   </button>
