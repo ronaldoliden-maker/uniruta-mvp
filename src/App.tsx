@@ -10,6 +10,13 @@ import {
   type NotasPorId,
 } from './utils/calcularNotas'
 
+import {
+  cargarMetaCurso,
+  cargarNotasCurso,
+  guardarMetaCurso,
+  guardarNotasCurso,
+} from './utils/almacenamientoCursos'
+
 type Actividad = {
   id: number
   nombre: string
@@ -21,9 +28,9 @@ type Actividad = {
 
 type ModoNotas = 'oficial' | 'simulacion'
 
-const CLAVE_ACTIVIDADES = 'uniruta-actividades'
-const CLAVE_NOTAS_OFICIALES = 'uniruta-notas-automaticas'
-const CLAVE_META = 'uniruta-meta-nota'
+const CLAVE_ACTIVIDADES = 
+  'uniruta-actividades'
+
 
 const actividadesIniciales: Actividad[] = [
   {
@@ -100,53 +107,15 @@ const actividadesIniciales: Actividad[] = [
   },
 ]
 
-// La configuración decide qué evaluaciones existen y cuál es su nota máxima.
-const evaluacionesDinamicas = obtenerEvaluacionesDirectas(
-  configuracionEDO.componentes,
-)
 
-
-// El motor obtiene automáticamente el peso real
-// de cada evaluación desde la configuración del curso.
-const pesosEvaluaciones =
-  obtenerPesosEvaluacionesDirectas(
-    configuracionEDO.componentes,
-  )
 
 function tieneNota(valor: number | string | undefined) {
   return valor !== '' && valor !== undefined
 }
 
-function crearNotasIniciales(): NotasPorId {
-  const notasVacias: NotasPorId = {}
 
-  evaluacionesDinamicas.forEach((evaluacion) => {
-    notasVacias[evaluacion.id] = ''
-  })
-
-  const notasGuardadas = localStorage.getItem(CLAVE_NOTAS_OFICIALES)
-
-  if (notasGuardadas) {
-    try {
-      const notasParseadas = JSON.parse(notasGuardadas) as NotasPorId
-
-      return {
-        ...notasVacias,
-        ...notasParseadas,
-      }
-    } catch {
-      localStorage.removeItem(CLAVE_NOTAS_OFICIALES)
-    }
-  }
-
-  // Compatibilidad con las notas que se guardaron antes en claves individuales.
-  evaluacionesDinamicas.forEach((evaluacion) => {
-    notasVacias[evaluacion.id] =
-      localStorage.getItem(`uniruta-nota-${evaluacion.id}`) ?? ''
-  })
-
-  return notasVacias
-}
+const cursoInicial =
+  cursosIniciales[0] ?? null
 
 function App() {
   // ------------------------------------------------------------
@@ -156,8 +125,16 @@ function App() {
   const [pestanaCurso, setPestanaCurso] = useState('resumen')
 
   // ID del curso que el estudiante abrió desde el panel
-const [cursoSeleccionadoId, setCursoSeleccionadoId] =
-useState<string | null>(null)
+  const [cursoSeleccionadoId, setCursoSeleccionadoId] =
+    useState<string | null>(
+      cursoInicial?.id ?? null,
+    )
+
+  const cursoSeleccionado =
+    cursosIniciales.find(
+      (curso) =>
+        curso.id === cursoSeleccionadoId,
+    ) ?? cursoInicial
 
   // ------------------------------------------------------------
   // 2. Actividades
@@ -189,7 +166,11 @@ useState<string | null>(null)
   // 3. Notas oficiales y simulación
   // ------------------------------------------------------------
   const [notasOficiales, setNotasOficiales] =
-    useState<NotasPorId>(crearNotasIniciales)
+    useState<NotasPorId>(() =>
+      cursoInicial
+        ? cargarNotasCurso(cursoInicial)
+        : {},
+    )
 
   const [modoNotas, setModoNotas] = useState<ModoNotas>('oficial')
 
@@ -197,9 +178,12 @@ useState<string | null>(null)
   const [notasSimuladas, setNotasSimuladas] =
     useState<NotasPorId>({})
 
-  const [metaNota, setMetaNota] = useState(
-    () => localStorage.getItem(CLAVE_META) ?? '10.5',
-  )
+    const [metaNota, setMetaNota] =
+    useState(() =>
+      cursoInicial
+        ? cargarMetaCurso(cursoInicial)
+        : '10.5',
+    )
 
   // ------------------------------------------------------------
   // 4. Persistencia
@@ -212,15 +196,32 @@ useState<string | null>(null)
   }, [actividades])
 
   useEffect(() => {
-    localStorage.setItem(
-      CLAVE_NOTAS_OFICIALES,
-      JSON.stringify(notasOficiales),
+    if (!cursoSeleccionadoId) {
+      return
+    }
+  
+    guardarNotasCurso(
+      cursoSeleccionadoId,
+      notasOficiales,
     )
-  }, [notasOficiales])
-
+  }, [
+    notasOficiales,
+    cursoSeleccionadoId,
+  ])
+  
   useEffect(() => {
-    localStorage.setItem(CLAVE_META, metaNota)
-  }, [metaNota])
+    if (!cursoSeleccionadoId) {
+      return
+    }
+  
+    guardarMetaCurso(
+      cursoSeleccionadoId,
+      metaNota,
+    )
+  }, [
+    metaNota,
+    cursoSeleccionadoId,
+  ])
 
   // ------------------------------------------------------------
   // 5. Cálculos de actividades
@@ -248,6 +249,23 @@ useState<string | null>(null)
   const proximaActividad = actividadesOrdenadas.find(
     (actividad) => actividad.estado !== 'Completada',
   )
+
+  // Evaluaciones pertenecientes al curso abierto.
+  const evaluacionesDinamicas =
+  cursoSeleccionado
+    ? obtenerEvaluacionesDirectas(
+        cursoSeleccionado.componentes,
+      )
+    : []
+
+  // Peso real de cada evaluación dentro de ese curso.
+  const pesosEvaluaciones =
+  cursoSeleccionado
+    ? obtenerPesosEvaluacionesDirectas(
+        cursoSeleccionado.componentes,
+      )
+    : {}  
+
 
   // ------------------------------------------------------------
   // 6. Funciones de actividades
@@ -470,17 +488,26 @@ useState<string | null>(null)
       ? notasSimuladas
       : notasOficiales
 
-  const notaFinalOficial = calcularNotaFinal(
-    configuracionEDO.componentes,
-    notasOficiales,
-    configuracionEDO.notaMaxima,
-  )
+  const notaFinalOficial =
+    cursoSeleccionado
+      ? calcularNotaFinal(
+          cursoSeleccionado.componentes,
+          notasOficiales,
+          cursoSeleccionado.notaMaxima,
+        )
+      : 0
 
-  const notaFinalMostrada = calcularNotaFinal(
-    configuracionEDO.componentes,
-    notasEnFormulario,
-    configuracionEDO.notaMaxima,
-  )
+  const notaFinalMostrada =
+    cursoSeleccionado
+      ? calcularNotaFinal(
+          cursoSeleccionado.componentes,
+          notasEnFormulario,
+          cursoSeleccionado.notaMaxima,
+        )
+      : 0
+  
+  const notaMinimaCurso =
+    cursoSeleccionado?.notaMinima ?? 10.5
 
   const notaFinalRedondeada = Math.round(notaFinalMostrada)
   const diferenciaSimulada =
@@ -538,14 +565,14 @@ useState<string | null>(null)
 
   const estadoMostrado =
     modoNotas === 'simulacion'
-      ? notaFinalMostrada >= configuracionEDO.notaMinima
+      ? notaFinalMostrada >= notaMinimaCurso
         ? 'Aprobado en simulación'
-        : `No alcanza ${configuracionEDO.notaMinima}`
+        : `No alcanza ${notaMinimaCurso}`
       : porcentajeEvaluado === 0
         ? 'Sin notas'
         : porcentajeEvaluado < 100
           ? 'En progreso'
-          : notaFinalOficial >= configuracionEDO.notaMinima
+          : notaFinalOficial >= notaMinimaCurso
             ? 'Aprobado'
             : 'Desaprobado'
 
@@ -578,11 +605,33 @@ const cursosPanel = cursosIniciales.map((curso) => {
   }
 })
 
-// Busca dentro del registro general el curso que abrió el estudiante
-const cursoSeleccionado =
-  cursosIniciales.find(
-    (curso) => curso.id === cursoSeleccionadoId,
-  ) ?? null
+function abrirCurso(cursoId: string) {
+  const curso = cursosIniciales.find(
+    (cursoRegistrado) =>
+      cursoRegistrado.id === cursoId,
+  )
+
+  if (!curso) {
+    return
+  }
+
+  setCursoSeleccionadoId(curso.id)
+
+  setNotasOficiales(
+    cargarNotasCurso(curso),
+  )
+
+  setMetaNota(
+    cargarMetaCurso(curso),
+  )
+
+  // Toda simulación anterior se elimina al cambiar de curso.
+  setNotasSimuladas({})
+  setModoNotas('oficial')
+
+  setVista('curso')
+  setPestanaCurso('resumen')
+}
 
   return (
     <main className="app">
@@ -671,11 +720,7 @@ const cursoSeleccionado =
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setCursoSeleccionadoId(curso.id)
-                      setVista('curso')
-                      setPestanaCurso('resumen')
-                    }}
+                    onClick={() => abrirCurso(curso.id)}
                   >
                     Abrir curso
                   </button>
@@ -974,7 +1019,13 @@ const cursoSeleccionado =
                 <p>Calculadora del curso</p>
                 <h2>Sistema de evaluación</h2>
                 <span>
-                  Nota final = 20 % EP + 30 % EF + 25 % EC1 + 25 % EC2
+                  Nota final ={' '}
+                  {cursoSeleccionado?.componentes
+                    .map(
+                      (componente) =>
+                        `${componente.peso ?? 0} % ${componente.nombre}`,
+                    )
+                    .join(' + ')}
                 </span>
               </div>
 
