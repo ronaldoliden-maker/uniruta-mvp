@@ -9,6 +9,13 @@ import {
 } from "pdfjs-dist";
 import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
+import type {
+  EvaluacionPropuesta,
+  PropuestaSilabo,
+  TemaPropuesto,
+} from "../types/propuestaSilabo";
+import { analizarTextoSilabo } from "../utils/analizarTextoSilabo";
+
 GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 type ImportarSilaboCursoProps = {
@@ -63,11 +70,17 @@ function ImportarSilaboCurso({
     useState("");
   const [numeroPaginas, setNumeroPaginas] =
     useState(0);
+  const [propuesta, setPropuesta] =
+    useState<PropuestaSilabo | null>(null);
+  const [mensajePeso, setMensajePeso] =
+    useState("");
 
   function limpiarResultado() {
     setTextoExtraido("");
     setNumeroPaginas(0);
     setProgreso("");
+    setPropuesta(null);
+    setMensajePeso("");
   }
 
   function seleccionarArchivo(
@@ -227,6 +240,240 @@ function ImportarSilaboCurso({
     }
   }
 
+  function generarPropuesta() {
+    if (!textoExtraido) {
+      return;
+    }
+
+    const propuestaDetectada =
+      analizarTextoSilabo(textoExtraido);
+
+    setPropuesta({
+      ...propuestaDetectada,
+      nombreCurso:
+        propuestaDetectada.nombreCurso || nombreCurso,
+    });
+    setMensajePeso("");
+  }
+
+  function actualizarDatoCurso(
+    campo:
+      | "codigoCurso"
+      | "nombreCurso"
+      | "notaMinima"
+      | "formula",
+    valor: string,
+  ) {
+    setPropuesta((propuestaActual) =>
+      propuestaActual
+        ? {
+            ...propuestaActual,
+            [campo]: valor,
+          }
+        : propuestaActual,
+    );
+  }
+
+  function actualizarEvaluacion(
+    evaluacionId: string,
+    campo: keyof Omit<EvaluacionPropuesta, "id">,
+    valor: string,
+  ) {
+    if (!propuesta) {
+      return;
+    }
+
+    if (campo === "peso") {
+      if (valor === "") {
+        setMensajePeso("");
+      } else {
+        const pesoNuevo = Number(valor);
+
+        if (
+          !Number.isFinite(pesoNuevo) ||
+          pesoNuevo < 0 ||
+          pesoNuevo > 100
+        ) {
+          setMensajePeso(
+            "El peso debe estar entre 0 % y 100 %.",
+          );
+          return;
+        }
+
+        const pesoDeOtrasEvaluaciones =
+          propuesta.evaluaciones.reduce(
+            (total, evaluacion) =>
+              evaluacion.id === evaluacionId
+                ? total
+                : total +
+                  (Number(evaluacion.peso) || 0),
+            0,
+          );
+
+        const pesoDisponible = Math.max(
+          0,
+          100 - pesoDeOtrasEvaluaciones,
+        );
+
+        if (pesoNuevo > pesoDisponible + 0.0001) {
+          setMensajePeso(
+            `Esa evaluación puede pesar como máximo ${pesoDisponible.toFixed(
+              2,
+            )} %. Reduce el peso de otra evaluación primero.`,
+          );
+          return;
+        }
+
+        setMensajePeso("");
+      }
+    }
+
+    setPropuesta({
+      ...propuesta,
+      evaluaciones: propuesta.evaluaciones.map(
+        (evaluacion) =>
+          evaluacion.id === evaluacionId
+            ? {
+                ...evaluacion,
+                [campo]: valor,
+              }
+            : evaluacion,
+      ),
+    });
+  }
+
+  function agregarEvaluacion() {
+    const pesoActual =
+      propuesta?.evaluaciones.reduce(
+        (total, evaluacion) =>
+          total + (Number(evaluacion.peso) || 0),
+        0,
+      ) ?? 0;
+
+    const pesoDisponible = Math.max(
+      0,
+      100 - pesoActual,
+    );
+
+    if (!propuesta) {
+      return;
+    }
+
+    if (pesoDisponible <= 0.0001) {
+      setMensajePeso(
+        "El peso total ya es 100 %. Reduce o elimina otra evaluación antes de agregar una nueva.",
+      );
+      return;
+    }
+
+    setPropuesta({
+      ...propuesta,
+      evaluaciones: [
+        ...propuesta.evaluaciones,
+        {
+          id: `evaluacion-manual-${Date.now()}`,
+          nombre: "Nueva evaluación",
+          peso: "",
+          semana: "",
+        },
+      ],
+    });
+
+    setMensajePeso(
+      `Nueva evaluación agregada. Tienes ${pesoDisponible.toFixed(
+        2,
+      )} % disponible para asignar.`,
+    );
+  }
+
+  function eliminarEvaluacion(
+    evaluacionId: string,
+  ) {
+    setPropuesta((propuestaActual) =>
+      propuestaActual
+        ? {
+            ...propuestaActual,
+            evaluaciones:
+              propuestaActual.evaluaciones.filter(
+                (evaluacion) =>
+                  evaluacion.id !== evaluacionId,
+              ),
+          }
+        : propuestaActual,
+    );
+
+    setMensajePeso("");
+  }
+
+  function actualizarTema(
+    temaId: string,
+    campo: keyof Omit<TemaPropuesto, "id">,
+    valor: string,
+  ) {
+    setPropuesta((propuestaActual) =>
+      propuestaActual
+        ? {
+            ...propuestaActual,
+            temas: propuestaActual.temas.map(
+              (tema) =>
+                tema.id === temaId
+                  ? {
+                      ...tema,
+                      [campo]: valor,
+                    }
+                  : tema,
+            ),
+          }
+        : propuestaActual,
+    );
+  }
+
+  function agregarTema() {
+    setPropuesta((propuestaActual) =>
+      propuestaActual
+        ? {
+            ...propuestaActual,
+            temas: [
+              ...propuestaActual.temas,
+              {
+                id: `tema-manual-${Date.now()}`,
+                titulo: "Nuevo tema",
+                semana: "",
+              },
+            ],
+          }
+        : propuestaActual,
+    );
+  }
+
+  function eliminarTema(temaId: string) {
+    setPropuesta((propuestaActual) =>
+      propuestaActual
+        ? {
+            ...propuestaActual,
+            temas: propuestaActual.temas.filter(
+              (tema) => tema.id !== temaId,
+            ),
+          }
+        : propuestaActual,
+    );
+  }
+
+  const pesoTotal =
+    propuesta?.evaluaciones.reduce(
+      (total, evaluacion) =>
+        total + (Number(evaluacion.peso) || 0),
+      0,
+    ) ?? 0;
+
+  const pesoDisponible = Math.max(
+    0,
+    100 - pesoTotal,
+  );
+
+  const pesoTotalValido =
+    Math.abs(pesoTotal - 100) < 0.001;
+
   return (
     <section className="activities-panel">
       <div className="activities-header">
@@ -240,9 +487,8 @@ function ImportarSilaboCurso({
         <p>Curso seleccionado</p>
         <h2>{nombreCurso}</h2>
         <span>
-          Primero extraeremos el texto del PDF. Después
-          UniRuta lo convertirá en evaluaciones, porcentajes,
-          semanas y temas.
+          UniRuta leerá el PDF y preparará una propuesta
+          editable antes de modificar el curso.
         </span>
       </article>
 
@@ -285,9 +531,7 @@ function ImportarSilaboCurso({
             </p>
 
             <div className="activity-meta">
-              <span>
-                {formatearTamano(archivo.size)}
-              </span>
+              <span>{formatearTamano(archivo.size)}</span>
               <span>PDF</span>
 
               {numeroPaginas > 0 && (
@@ -328,21 +572,32 @@ function ImportarSilaboCurso({
 
       {textoExtraido && (
         <section className="grade-components">
-          <h2>Texto extraído del sílabo</h2>
+          <div className="activities-header">
+            <div>
+              <p>Texto reconocido</p>
+              <h2>Contenido extraído</h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={generarPropuesta}
+            >
+              Generar propuesta
+            </button>
+          </div>
 
           <label className="form-field">
             <span>
-              Revisa que el contenido sea legible antes de
-              continuar.
+              Revisa que el contenido sea legible.
             </span>
 
             <textarea
               readOnly
-              rows={18}
+              rows={12}
               value={textoExtraido}
               style={{
                 width: "100%",
-                minHeight: "320px",
+                minHeight: "240px",
                 padding: "12px",
                 resize: "vertical",
                 fontFamily: "inherit",
@@ -350,12 +605,337 @@ function ImportarSilaboCurso({
               }}
             />
           </label>
+        </section>
+      )}
 
-          <small>
-            Todavía no se guardará nada en el curso. En el
-            siguiente paso convertiremos este texto en una
-            propuesta que podrás revisar y confirmar.
-          </small>
+      {propuesta && (
+        <section className="activities-panel">
+          <div className="activities-header">
+            <div>
+              <p>Revisión previa</p>
+              <h2>Propuesta detectada</h2>
+            </div>
+          </div>
+
+          {propuesta.advertencias.length > 0 && (
+            <article className="next-activity">
+              <p>Revisión necesaria</p>
+              <h2>
+                Comprueba los datos antes de guardarlos
+              </h2>
+
+              {propuesta.advertencias.map(
+                (advertencia) => (
+                  <span key={advertencia}>
+                    {advertencia}
+                  </span>
+                ),
+              )}
+            </article>
+          )}
+
+          <form className="activity-form">
+            <h3>Datos del curso</h3>
+
+            <div className="form-grid">
+              <label className="form-field">
+                <span>Código</span>
+                <input
+                  type="text"
+                  value={propuesta.codigoCurso}
+                  onChange={(event) =>
+                    actualizarDatoCurso(
+                      "codigoCurso",
+                      event.target.value,
+                    )
+                  }
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Nombre</span>
+                <input
+                  type="text"
+                  value={propuesta.nombreCurso}
+                  onChange={(event) =>
+                    actualizarDatoCurso(
+                      "nombreCurso",
+                      event.target.value,
+                    )
+                  }
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Nota mínima</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="20"
+                  step="0.1"
+                  value={propuesta.notaMinima}
+                  onChange={(event) =>
+                    actualizarDatoCurso(
+                      "notaMinima",
+                      event.target.value,
+                    )
+                  }
+                />
+              </label>
+
+              <label className="form-field">
+                <span>Fórmula reconocida</span>
+                <input
+                  type="text"
+                  value={propuesta.formula}
+                  onChange={(event) =>
+                    actualizarDatoCurso(
+                      "formula",
+                      event.target.value,
+                    )
+                  }
+                />
+              </label>
+            </div>
+          </form>
+
+          <section className="grade-components">
+            <div className="activities-header">
+              <div>
+                <p>
+                  Peso total: {pesoTotal.toFixed(2)} % ·
+                  Disponible: {pesoDisponible.toFixed(2)} %
+                </p>
+                <h2>Evaluaciones detectadas</h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={agregarEvaluacion}
+                disabled={pesoDisponible <= 0.0001}
+              >
+                + Agregar evaluación
+              </button>
+            </div>
+
+            <article className="next-activity">
+              <p>Validación de porcentajes</p>
+              <h2>
+                {pesoTotalValido
+                  ? "El sistema suma exactamente 100 %"
+                  : `Falta distribuir ${pesoDisponible.toFixed(
+                      2,
+                    )} %`}
+              </h2>
+              <span>
+                {pesoTotalValido
+                  ? "Para agregar otra evaluación, primero reduce el peso de una existente."
+                  : "La propuesta solo podrá guardarse cuando la suma sea exactamente 100 %."}
+              </span>
+            </article>
+
+            {mensajePeso && (
+              <p className="notes-mode-message">
+                {mensajePeso}
+              </p>
+            )}
+
+            {propuesta.evaluaciones.length === 0 ? (
+              <article className="next-activity">
+                <p>Evaluaciones</p>
+                <h2>No se detectaron evaluaciones</h2>
+                <span>
+                  Puedes agregarlas manualmente antes de
+                  guardar.
+                </span>
+              </article>
+            ) : (
+              <div className="activities-list">
+                {propuesta.evaluaciones.map(
+                  (evaluacion) => (
+                    <article
+                      className="activity-card"
+                      key={evaluacion.id}
+                    >
+                      <div className="form-grid">
+                        <label className="form-field">
+                          <span>Evaluación</span>
+                          <input
+                            type="text"
+                            value={evaluacion.nombre}
+                            onChange={(event) =>
+                              actualizarEvaluacion(
+                                evaluacion.id,
+                                "nombre",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+
+                        <label className="form-field">
+                          <span>Peso (%)</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max={
+                              100 -
+                              propuesta.evaluaciones.reduce(
+                                (total, otraEvaluacion) =>
+                                  otraEvaluacion.id ===
+                                  evaluacion.id
+                                    ? total
+                                    : total +
+                                      (Number(
+                                        otraEvaluacion.peso,
+                                      ) || 0),
+                                0,
+                              )
+                            }
+                            step="0.01"
+                            value={evaluacion.peso}
+                            onChange={(event) =>
+                              actualizarEvaluacion(
+                                evaluacion.id,
+                                "peso",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+
+                        <label className="form-field">
+                          <span>Semana</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="20"
+                            value={evaluacion.semana}
+                            onChange={(event) =>
+                              actualizarEvaluacion(
+                                evaluacion.id,
+                                "semana",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+
+                      <div className="activity-actions">
+                        <button
+                          type="button"
+                          className="delete-activity-button"
+                          onClick={() =>
+                            eliminarEvaluacion(
+                              evaluacion.id,
+                            )
+                          }
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </article>
+                  ),
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="grade-components">
+            <div className="activities-header">
+              <div>
+                <p>
+                  {propuesta.temas.length} temas encontrados
+                </p>
+                <h2>Temario detectado</h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={agregarTema}
+              >
+                + Agregar tema
+              </button>
+            </div>
+
+            {propuesta.temas.length === 0 ? (
+              <article className="next-activity">
+                <p>Temario</p>
+                <h2>No se detectaron temas</h2>
+                <span>
+                  Puedes agregarlos manualmente antes de
+                  guardar.
+                </span>
+              </article>
+            ) : (
+              <div className="activities-list">
+                {propuesta.temas.map((tema) => (
+                  <article
+                    className="activity-card"
+                    key={tema.id}
+                  >
+                    <div className="form-grid">
+                      <label className="form-field">
+                        <span>Tema</span>
+                        <input
+                          type="text"
+                          value={tema.titulo}
+                          onChange={(event) =>
+                            actualizarTema(
+                              tema.id,
+                              "titulo",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label className="form-field">
+                        <span>Semana</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={tema.semana}
+                          onChange={(event) =>
+                            actualizarTema(
+                              tema.id,
+                              "semana",
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Revisar"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="activity-actions">
+                      <button
+                        type="button"
+                        className="delete-activity-button"
+                        onClick={() =>
+                          eliminarTema(tema.id)
+                        }
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <button type="button" disabled>
+            Guardar propuesta en el curso
+          </button>
+
+          <p className="notes-mode-message">
+            Todavía no se modificó el curso. En el siguiente
+            paso conectaremos este botón para guardar las
+            evaluaciones y el temario confirmados.
+          </p>
         </section>
       )}
     </section>
