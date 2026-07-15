@@ -178,6 +178,10 @@ function App() {
   const [vista, setVista] = useState('inicio')
   const [pestanaCurso, setPestanaCurso] = useState('resumen')
 
+  // ID del curso que el estudiante abrió desde el panel
+const [cursoSeleccionadoId, setCursoSeleccionadoId] =
+useState<string | null>(null)
+
   // ------------------------------------------------------------
   // 2. Actividades
   // ------------------------------------------------------------
@@ -597,6 +601,12 @@ const cursosPanel = cursosIniciales.map((curso) => {
   }
 })
 
+// Busca dentro del registro general el curso que abrió el estudiante
+const cursoSeleccionado =
+  cursosIniciales.find(
+    (curso) => curso.id === cursoSeleccionadoId,
+  ) ?? null
+
   return (
     <main className="app">
       <header className="topbar">
@@ -605,7 +615,12 @@ const cursosPanel = cursosIniciales.map((curso) => {
           <p>Planificación académica universitaria</p>
         </div>
 
-        <span>Ciclo {configuracionEDO.ciclo}</span>
+        <span>
+          Ciclo{' '}
+          {cursoSeleccionado?.ciclo ??
+            cursosIniciales[0]?.ciclo ??
+            'Sin ciclo'}
+        </span>
       </header>
 
       {vista === 'inicio' && (
@@ -680,6 +695,7 @@ const cursosPanel = cursosIniciales.map((curso) => {
                   <button
                     type="button"
                     onClick={() => {
+                      setCursoSeleccionadoId(curso.id)
                       setVista('curso')
                       setPestanaCurso('resumen')
                     }}
@@ -701,7 +717,7 @@ const cursosPanel = cursosIniciales.map((curso) => {
         </section>
       )}
 
-      {vista === 'curso' && (
+      {vista === 'curso' && cursoSeleccionado && (
         <section className="course-detail">
           <button
             type="button"
@@ -713,8 +729,16 @@ const cursosPanel = cursosIniciales.map((curso) => {
 
           <div className="course-heading">
             <p>Curso</p>
-            <h1>{configuracionEDO.nombre}</h1>
-            <span>En curso</span>
+
+            <h1>{cursoSeleccionado.nombre}</h1>
+
+            <span>
+              {cursoSeleccionado.estado === 'en_curso'
+                ? 'En curso'
+                : cursoSeleccionado.estado === 'completado'
+                  ? 'Completado'
+                  : 'Archivado'}
+            </span>
           </div>
 
           <nav className="course-tabs">
@@ -793,8 +817,11 @@ const cursosPanel = cursosIniciales.map((curso) => {
               <section className="grade-components">
                 <h2>Componentes de la nota</h2>
 
-                {configuracionEDO.componentes.map((componente) => (
-                  <div className="grade-component" key={componente.id}>
+                {cursoSeleccionado.componentes.map((componente) => (
+                  <div 
+                    className="grade-component" 
+                    key={componente.id}
+                  >
                     <span>{componente.nombre}</span>
                     <strong>{componente.peso ?? 0} %</strong>
                   </div>
