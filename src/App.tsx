@@ -159,6 +159,44 @@ function App() {
     (actividad) => actividad.estado === 'Completada',
   ).length
 
+  // Suma las actividades de todos los cursos para el panel principal.
+  const resumenActividadesGlobal =
+  cursosIniciales.reduce(
+    (totales, curso) => {
+      const actividadesDelCurso =
+        curso.id === cursoSeleccionadoId
+          ? actividades
+          : cargarActividadesCurso(curso.id)
+
+      const pendientesDelCurso =
+        actividadesDelCurso.filter(
+          (actividad) =>
+            actividad.estado !== 'Completada',
+        ).length
+
+      const completadasDelCurso =
+        actividadesDelCurso.filter(
+          (actividad) =>
+            actividad.estado === 'Completada',
+        ).length
+
+      return {
+        pendientes:
+          totales.pendientes +
+          pendientesDelCurso,
+
+        completadas:
+          totales.completadas +
+          completadasDelCurso,
+      }
+    },
+    {
+      pendientes: 0,
+      completadas: 0,
+    },
+  )
+
+
   function obtenerNumeroSemana(textoSemana: string) {
     const coincidencia = textoSemana.match(/\d+/)
 
@@ -624,10 +662,13 @@ function abrirCurso(cursoId: string) {
           </p>
 
           <div className="summary-grid">
-            <article className="summary-card">
-              <strong>{pendientes}</strong>
-              <span>Pendientes</span>
-            </article>
+          <article className="summary-card">
+          <strong>
+            {resumenActividadesGlobal.pendientes}
+          </strong>
+
+          <span>Pendientes</span>
+        </article>
 
             <article className="summary-card">
               <strong>0</strong>
@@ -635,7 +676,10 @@ function abrirCurso(cursoId: string) {
             </article>
 
             <article className="summary-card">
-              <strong>{completadas}</strong>
+              <strong>
+                {resumenActividadesGlobal.completadas}
+              </strong>
+
               <span>Completadas</span>
             </article>
           </div>
