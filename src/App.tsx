@@ -8,6 +8,7 @@ import TarjetaCurso from "./components/TarjetaCurso";
 import EncabezadoCurso from "./components/EncabezadoCurso";
 import ResumenCurso from "./components/ResumenCurso";
 import TemarioCurso from "./components/TemarioCurso";
+import ActividadesCurso from "./components/ActividadesCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1279,157 +1280,30 @@ function App() {
 )}
 
           {pestanaCurso === "actividades" && (
-            <section className="activities-panel">
-              <div className="activities-header">
-                <div>
-                  <p>Organización del curso</p>
-                  <h2>Actividades</h2>
-                </div>
+            <ActividadesCurso
+              actividades={actividadesOrdenadas}
 
-                <button type="button" onClick={abrirFormularioNuevo}>
-                  + Agregar actividad
-                </button>
-              </div>
+              mostrarFormulario={mostrarFormulario}
+              actividadEditandoId={actividadEditandoId}
 
-              {mostrarFormulario && (
-                <form className="activity-form" onSubmit={agregarActividad}>
-                  <h3>
-                    {actividadEditandoId !== null
-                      ? "Editar actividad"
-                      : "Nueva actividad"}
-                  </h3>
+              nombreActividad={nombreActividad}
+              tipoActividad={tipoActividad}
+              semanaActividad={semanaActividad}
+              fechaActividad={fechaActividad}
 
-                  <div className="form-grid">
-                    <label className="form-field">
-                      <span>Nombre</span>
-                      <input
-                        type="text"
-                        value={nombreActividad}
-                        onChange={(event) =>
-                          setNombreActividad(event.target.value)
-                        }
-                        placeholder="Ejemplo: Quiz 1"
-                        required
-                      />
-                    </label>
+              onCambiarNombre={setNombreActividad}
+              onCambiarTipo={setTipoActividad}
+              onCambiarSemana={setSemanaActividad}
+              onCambiarFecha={setFechaActividad}
 
-                    <label className="form-field">
-                      <span>Tipo</span>
-                      <select
-                        value={tipoActividad}
-                        onChange={(event) =>
-                          setTipoActividad(event.target.value)
-                        }
-                      >
-                        <option>Evaluación en aula</option>
-                        <option>Tarea</option>
-                        <option>Resolución de casos</option>
-                        <option>Proyecto</option>
-                        <option>Examen</option>
-                        <option>Reunión</option>
-                        <option>Sesión de estudio</option>
-                      </select>
-                    </label>
+              onAbrirNueva={abrirFormularioNuevo}
+              onCancelar={limpiarFormulario}
+              onGuardar={agregarActividad}
 
-                    <label className="form-field">
-                      <span>Semana</span>
-                      <input
-                        type="number"
-                        min="1"
-                        max="16"
-                        value={semanaActividad}
-                        onChange={(event) =>
-                          setSemanaActividad(event.target.value)
-                        }
-                        placeholder="1"
-                        required
-                      />
-                    </label>
-
-                    <label className="form-field">
-                      <span>Fecha exacta opcional</span>
-                      <input
-                        type="date"
-                        value={fechaActividad}
-                        onChange={(event) =>
-                          setFechaActividad(event.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
-
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="cancel-button"
-                      onClick={limpiarFormulario}
-                    >
-                      Cancelar
-                    </button>
-
-                    <button type="submit">
-                      {actividadEditandoId !== null
-                        ? "Guardar cambios"
-                        : "Guardar actividad"}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              <div className="activities-list">
-                {actividadesOrdenadas.map((actividad) => (
-                  <article className="activity-card" key={actividad.id}>
-                    <div>
-                      <h3>{actividad.nombre}</h3>
-                      <p>{actividad.tipo}</p>
-
-                      <div className="activity-meta">
-                        <span>{actividad.semana}</span>
-                        <span>{actividad.fecha}</span>
-                      </div>
-                    </div>
-
-                    <div className="activity-actions">
-                      <span
-                        className={`status-badge ${
-                          actividad.estado === "Completada"
-                            ? "completed-status"
-                            : ""
-                        }`}
-                      >
-                        {actividad.estado}
-                      </span>
-
-                      <button
-                        type="button"
-                        className="activity-status-button"
-                        onClick={() => alternarEstadoActividad(actividad.id)}
-                      >
-                        {actividad.estado === "Completada"
-                          ? "Reabrir"
-                          : "Completar"}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="edit-activity-button"
-                        onClick={() => abrirFormularioEdicion(actividad.id)}
-                      >
-                        Editar
-                      </button>
-
-                      <button
-                        type="button"
-                        className="delete-activity-button"
-                        onClick={() => eliminarActividad(actividad.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
+              onCambiarEstado={alternarEstadoActividad}
+              onEditar={abrirFormularioEdicion}
+              onEliminar={eliminarActividad}
+            />
           )}
 
           {pestanaCurso === "notas" && (
