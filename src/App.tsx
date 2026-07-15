@@ -12,10 +12,9 @@ import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
 import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
 import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
 import PanelPrincipal from "./components/PanelPrincipal";
+import useNavegacion from "./hooks/useNavegacion";
 
-import NavegacionCurso, {
-  type PestanaCurso,
-} from "./components/NavegacionCurso";
+import NavegacionCurso from "./components/NavegacionCurso";
 
 import type { ComponenteNota, Curso } from "./types/academico";
 
@@ -65,9 +64,14 @@ function App() {
   // ------------------------------------------------------------
   // 1. Navegación
   // ------------------------------------------------------------
-  const [vista, setVista] = useState("inicio");
-  const [pestanaCurso, setPestanaCurso] =
-    useState<PestanaCurso>("resumen");
+  const {
+    vista,
+    pestanaCurso,
+    setPestanaCurso,
+    irAlInicio,
+    irAlPanel,
+    abrirVistaCurso,
+  } = useNavegacion();
 
   // Lista editable de cursos del estudiante.
   // Debe declararse antes de utilizar cursosRegistrados.
@@ -772,8 +776,7 @@ function App() {
     limpiarFormularioTema();
     limpiarFormularioComponente();
 
-    setVista("curso");
-    setPestanaCurso("resumen");
+    abrirVistaCurso();
   }
 
   function limpiarFormularioCurso() {
@@ -1094,7 +1097,7 @@ function App() {
       />
 
       {vista === "inicio" && (
-        <Inicio onComenzar={() => setVista("panel")} />
+        <Inicio onComenzar={irAlPanel} />
       )}
 
       {vista === "panel" && (
@@ -1146,7 +1149,7 @@ function App() {
           }
           onEliminarCurso={eliminarCurso}
 
-          onVolver={() => setVista("inicio")}
+          onVolver={irAlInicio}
         />
       )}
 
@@ -1155,7 +1158,7 @@ function App() {
           <button
             type="button"
             className="back-button"
-            onClick={() => setVista("panel")}
+            onClick={irAlPanel}
           >
             ← Volver al panel
           </button>
