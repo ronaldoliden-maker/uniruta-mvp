@@ -6,6 +6,7 @@ import Inicio from "./components/Inicio";
 import ResumenGlobal from "./components/ResumenGlobal";
 import TarjetaCurso from "./components/TarjetaCurso";
 import EncabezadoCurso from "./components/EncabezadoCurso";
+import ResumenCurso from "./components/ResumenCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1238,62 +1239,15 @@ function App() {
           />
 
           {pestanaCurso === "resumen" && (
-            <>
-              <div className="course-summary-grid">
-                <article className="summary-card">
-                  <strong>
-                    {promedioActual === null ? "—" : promedioActual.toFixed(2)}
-                  </strong>
-                  <span>Promedio evaluado</span>
-                </article>
-
-                <article className="summary-card">
-                  <strong>{porcentajeEvaluado.toFixed(2)} %</strong>
-                  <span>Ya evaluado</span>
-                </article>
-
-                <article className="summary-card">
-                  <strong>{pendientes}</strong>
-                  <span>Actividades pendientes</span>
-                </article>
-
-                <article className="summary-card">
-                  <strong>
-                    {temasCompletados}/{temario.length}
-                  </strong>
-                  <span>Temas completados</span>
-                </article>
-              </div>
-
-              {proximaActividad ? (
-                <article className="next-activity">
-                  <p>Próxima actividad</p>
-                  <h2>
-                    {proximaActividad.nombre} — {proximaActividad.tipo}
-                  </h2>
-                  <span>
-                    {proximaActividad.semana} · {proximaActividad.fecha}
-                  </span>
-                </article>
-              ) : (
-                <article className="next-activity">
-                  <p>Próxima actividad</p>
-                  <h2>No tienes actividades pendientes</h2>
-                  <span>Has completado todas las actividades registradas.</span>
-                </article>
-              )}
-
-              <section className="grade-components">
-                <h2>Componentes de la nota</h2>
-
-                {cursoSeleccionado.componentes.map((componente) => (
-                  <div className="grade-component" key={componente.id}>
-                    <span>{componente.nombre}</span>
-                    <strong>{componente.peso ?? 0} %</strong>
-                  </div>
-                ))}
-              </section>
-            </>
+            <ResumenCurso
+              curso={cursoSeleccionado}
+              promedioActual={promedioActual}
+              porcentajeEvaluado={porcentajeEvaluado}
+              pendientes={pendientes}
+              temasCompletados={temasCompletados}
+              totalTemas={temario.length}
+              proximaActividad={proximaActividad}
+            />
           )}
 
           {pestanaCurso === "temario" && (
