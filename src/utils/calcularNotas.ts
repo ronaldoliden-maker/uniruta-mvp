@@ -250,3 +250,94 @@ import type {
       },
     )
   }
+
+  // Calcula el peso real de cada evaluación directa
+// dentro de la nota final del curso.
+export function obtenerPesosEvaluacionesDirectas(
+  componentes: ComponenteNota[],
+): Record<string, number> {
+  const pesos: Record<string, number> = {}
+
+  function recorrerComponente(
+    componente: ComponenteNota,
+    pesoAcumulado: number,
+  ) {
+    const hijos = componente.hijos ?? []
+
+    // Una nota directa recibe el peso acumulado hasta este nivel.
+    if (componente.tipo === 'nota_directa') {
+      pesos[componente.id] = pesoAcumulado
+      return
+    }
+
+    if (hijos.length === 0) {
+      return
+    }
+
+    // En un componente ponderado, cada hijo tiene
+    // un porcentaje definido.
+    if (componente.tipo === 'ponderado') {
+      hijos.forEach((hijo) => {
+        const pesoHijo = hijo.peso ?? 0
+
+        recorrerComponente(
+          hijo,
+          pesoAcumulado * (pesoHijo / 100),
+        )
+      })
+
+      return
+    }
+
+    // En un promedio, todos los hijos tienen el mismo peso.
+    if (componente.tipo === 'promedio') {
+      const pesoPorHijo =
+        pesoAcumulado / hijos.length
+
+      hijos.forEach((hijo) => {
+        recorrerComponente(
+          hijo,
+          pesoPorHijo,
+        )
+      })
+
+      return
+    }
+
+    // En una suma, el peso se distribuye según
+    // la nota máxima de cada hijo.
+    if (componente.tipo === 'suma') {
+      const notaMaximaPadre =
+        componente.notaMaxima ??
+        hijos.reduce(
+          (total, hijo) =>
+            total + (hijo.notaMaxima ?? 20),
+          0,
+        )
+
+      if (notaMaximaPadre === 0) {
+        return
+      }
+
+      hijos.forEach((hijo) => {
+        const notaMaximaHijo =
+          hijo.notaMaxima ?? 20
+
+        recorrerComponente(
+          hijo,
+          pesoAcumulado *
+            (notaMaximaHijo / notaMaximaPadre),
+        )
+      })
+    }
+  }
+
+  componentes.forEach((componente) => {
+    recorrerComponente(
+      componente,
+      componente.peso ?? 0,
+    )
+  })
+
+  return pesos
+}

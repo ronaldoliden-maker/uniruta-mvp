@@ -6,6 +6,7 @@ import { cursosIniciales } from './data/cursos'
 import {
   calcularNotaFinal,
   obtenerEvaluacionesDirectas,
+  obtenerPesosEvaluacionesDirectas,
   type NotasPorId,
 } from './utils/calcularNotas'
 
@@ -104,37 +105,13 @@ const evaluacionesDinamicas = obtenerEvaluacionesDirectas(
   configuracionEDO.componentes,
 )
 
-// Peso real de cada evaluación dentro de la nota final del curso.
-// Se usa para calcular cuánto del curso ya fue evaluado y la proyección.
-const pesosEvaluaciones: Record<string, number> = {
-  ep: 20,
-  ef: 30,
 
-  ea1: 17.5 / 3,
-  ea2: 17.5 / 3,
-  ea3: 17.5 / 3,
-
-  ta1: 1.25,
-  ta2: 1.25,
-
-  rc1: 1.25,
-  rc2: 1.25,
-
-  p1: 2.5,
-
-  ea4: 5,
-  ea5: 5,
-  ea6: 5,
-
-  ta3: 1.25,
-  ta4: 1.25,
-
-  rc3: 1.25,
-  rc4: 1.25,
-
-  p2: 1.25,
-  p3: 3.75,
-}
+// El motor obtiene automáticamente el peso real
+// de cada evaluación desde la configuración del curso.
+const pesosEvaluaciones =
+  obtenerPesosEvaluacionesDirectas(
+    configuracionEDO.componentes,
+  )
 
 function tieneNota(valor: number | string | undefined) {
   return valor !== '' && valor !== undefined
