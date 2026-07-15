@@ -13,6 +13,7 @@ import ResumenNotasCurso from "./components/ResumenNotasCurso";
 import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
 import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
 import SistemaEvaluacionCurso from "./components/SistemaEvaluacionCurso";
+import FormularioCurso from "./components/FormularioCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1122,83 +1123,19 @@ function App() {
             </div>
 
             {mostrarFormularioCurso && (
-              <form className="activity-form" onSubmit={agregarCurso}>
-                <h3>{cursoEditandoId ? "Editar curso" : "Nuevo curso"}</h3>
-
-                <div className="form-grid">
-                  <label className="form-field">
-                    <span>Nombre del curso</span>
-
-                    <input
-                      type="text"
-                      value={nombreCursoNuevo}
-                      onChange={(event) =>
-                        setNombreCursoNuevo(event.target.value)
-                      }
-                      placeholder="Ejemplo: Termodinámica"
-                      required
-                    />
-                  </label>
-
-                  <label className="form-field">
-                    <span>Código</span>
-
-                    <input
-                      type="text"
-                      value={codigoCursoNuevo}
-                      onChange={(event) =>
-                        setCodigoCursoNuevo(event.target.value)
-                      }
-                      placeholder="Ejemplo: TERMO"
-                      maxLength={12}
-                    />
-                  </label>
-
-                  <label className="form-field">
-                    <span>Ciclo</span>
-
-                    <input
-                      type="text"
-                      value={cicloCursoNuevo}
-                      onChange={(event) =>
-                        setCicloCursoNuevo(event.target.value)
-                      }
-                      placeholder="2026-1"
-                      required
-                    />
-                  </label>
-
-                  <label className="form-field">
-                    <span>Nota mínima</span>
-
-                    <input
-                      type="number"
-                      min="0"
-                      max="20"
-                      step="0.1"
-                      value={notaMinimaCursoNueva}
-                      onChange={(event) =>
-                        setNotaMinimaCursoNueva(event.target.value)
-                      }
-                      required
-                    />
-                  </label>
-                </div>
-
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="cancel-button"
-                    onClick={limpiarFormularioCurso}
-                  >
-                    Cancelar
-                  </button>
-
-                  <button type="submit">
-                    {cursoEditandoId ? "Guardar cambios" : "Guardar curso"}
-                  </button>
-                </div>
-              </form>
+              <FormularioCurso
+                cursoEditandoId={cursoEditandoId}
+                nombre={nombreCursoNuevo}
+                codigo={codigoCursoNuevo}
+                ciclo={cicloCursoNuevo}
+                notaMinima={notaMinimaCursoNueva}
+                onCambiarNombre={setNombreCursoNuevo}
+                onCambiarCodigo={setCodigoCursoNuevo}
+                onCambiarCiclo={setCicloCursoNuevo}
+                onCambiarNotaMinima={setNotaMinimaCursoNueva}
+                onGuardar={agregarCurso}
+                onCancelar={limpiarFormularioCurso}
+              />
             )}
 
             <div className="course-list">
