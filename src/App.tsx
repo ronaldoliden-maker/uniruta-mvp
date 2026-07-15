@@ -11,6 +11,7 @@ import TemarioCurso from "./components/TemarioCurso";
 import ActividadesCurso from "./components/ActividadesCurso";
 import ResumenNotasCurso from "./components/ResumenNotasCurso";
 import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
+import CalculadoraNotasCurso from "./components/CalculadoraNotasCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1328,154 +1329,22 @@ function App() {
                 onCambiarMeta={actualizarMeta}
               />
 
-              <section className="dynamic-evaluations-check">
-                <div className="dynamic-evaluations-heading">
-                  <div>
-                    <p>Calculadora dinámica</p>
-                    <h3>
-                      {modoNotas === "oficial"
-                        ? "Mis notas oficiales"
-                        : "Simulador de notas"}
-                    </h3>
-                  </div>
+              <CalculadoraNotasCurso
+                modo={modoNotas}
+                evaluaciones={evaluacionesDinamicas}
 
-                  <strong>{evaluacionesDinamicas.length} evaluaciones</strong>
-                </div>
+                notasOficiales={notasOficiales}
+                notasEnFormulario={notasEnFormulario}
 
-                <div className="notes-mode-switch">
-                  <button
-                    type="button"
-                    className={
-                      modoNotas === "oficial"
-                        ? "notes-mode-button active-notes-mode"
-                        : "notes-mode-button"
-                    }
-                    onClick={activarModoOficial}
-                  >
-                    Notas oficiales
-                  </button>
+                notaFinalOficial={notaFinalOficial}
+                notaFinalMostrada={notaFinalMostrada}
+                diferenciaSimulada={diferenciaSimulada}
 
-                  <button
-                    type="button"
-                    className={
-                      modoNotas === "simulacion"
-                        ? "notes-mode-button active-notes-mode"
-                        : "notes-mode-button"
-                    }
-                    onClick={activarModoSimulacion}
-                  >
-                    Simulador
-                  </button>
-                </div>
-
-                <div className="simulation-summary">
-                  <article>
-                    <span>Nota final oficial</span>
-                    <strong>{notaFinalOficial.toFixed(2)}</strong>
-                  </article>
-
-                  {modoNotas === "simulacion" && (
-                    <>
-                      <article>
-                        <span>Nota final simulada</span>
-                        <strong>{notaFinalMostrada.toFixed(2)}</strong>
-                      </article>
-
-                      <article>
-                        <span>Cambio estimado</span>
-                        <strong>
-                          {diferenciaSimulada >= 0 ? "+" : ""}
-                          {diferenciaSimulada.toFixed(2)}
-                        </strong>
-                      </article>
-                    </>
-                  )}
-                </div>
-
-                {modoNotas === "oficial" ? (
-                  <p className="notes-mode-message">
-                    Ingresa únicamente las notas que ya fueron publicadas. Estas
-                    notas se guardarán al cerrar o recargar la app.
-                  </p>
-                ) : (
-                  <p className="notes-mode-message simulation-message">
-                    Las notas oficiales están bloqueadas. Completa solamente las
-                    evaluaciones pendientes para probar resultados. La
-                    simulación no se guardará.
-                  </p>
-                )}
-
-                <div className="grade-input-grid">
-                  {evaluacionesDinamicas.map((evaluacion) => {
-                    const valorOficial = notasOficiales[evaluacion.id];
-
-                    const campoTieneNotaOficial = tieneNota(valorOficial);
-
-                    const valorActivo = notasEnFormulario[evaluacion.id] ?? "";
-
-                    const tieneNotaSimulada =
-                      modoNotas === "simulacion" &&
-                      !campoTieneNotaOficial &&
-                      tieneNota(valorActivo);
-
-                    const campoBloqueado =
-                      modoNotas === "simulacion" && campoTieneNotaOficial;
-
-                    return (
-                      <label className="grade-input-field" key={evaluacion.id}>
-                        <div className="dynamic-note-heading">
-                          <span>{evaluacion.nombre}</span>
-
-                          <small
-                            className={
-                              campoTieneNotaOficial
-                                ? "note-origin official-note"
-                                : tieneNotaSimulada
-                                  ? "note-origin simulated-note"
-                                  : "note-origin pending-note"
-                            }
-                          >
-                            {campoTieneNotaOficial
-                              ? "Oficial"
-                              : tieneNotaSimulada
-                                ? "Simulada"
-                                : "Pendiente"}
-                          </small>
-                        </div>
-
-                        <input
-                          type="number"
-                          min="0"
-                          max={evaluacion.notaMaxima}
-                          step="0.01"
-                          value={String(valorActivo)}
-                          disabled={campoBloqueado}
-                          onChange={(event) =>
-                            actualizarNota(
-                              evaluacion.id,
-                              event.target.value,
-                              evaluacion.notaMaxima,
-                            )
-                          }
-                          placeholder={`0 a ${evaluacion.notaMaxima}`}
-                        />
-
-                        <small>Máximo: {evaluacion.notaMaxima}</small>
-                      </label>
-                    );
-                  })}
-                </div>
-
-                {modoNotas === "simulacion" && (
-                  <button
-                    type="button"
-                    className="reset-simulation-button"
-                    onClick={restablecerSimulacion}
-                  >
-                    Restablecer simulación
-                  </button>
-                )}
-              </section>
+                onActivarOficial={activarModoOficial}
+                onActivarSimulacion={activarModoSimulacion}
+                onActualizarNota={actualizarNota}
+                onRestablecerSimulacion={restablecerSimulacion}
+              />
             </section>
           )}
         </section>
