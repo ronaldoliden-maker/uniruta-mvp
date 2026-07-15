@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import "./App.css";
 
+import Topbar from "./components/Topbar";
+
 import type { ComponenteNota, Curso } from "./types/academico";
 
 import {
@@ -1066,19 +1068,13 @@ function App() {
 
   return (
     <main className="app">
-      <header className="topbar">
-        <div>
-          <h2>UniRuta</h2>
-          <p>Planificación académica universitaria</p>
-        </div>
-
-        <span>
-          Ciclo{" "}
-          {cursoSeleccionado?.ciclo ??
-            cursosRegistrados[0]?.ciclo ??
-            "Sin ciclo"}
-        </span>
-      </header>
+      <Topbar
+        ciclo={
+          cursoSeleccionado?.ciclo ??
+          cursosRegistrados[0]?.ciclo ??
+          "Sin ciclo"
+        }
+      />
 
       {vista === "inicio" && (
         <section className="welcome">
