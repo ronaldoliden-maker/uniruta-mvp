@@ -10,6 +10,7 @@ import ResumenCurso from "./components/ResumenCurso";
 import TemarioCurso from "./components/TemarioCurso";
 import ActividadesCurso from "./components/ActividadesCurso";
 import ResumenNotasCurso from "./components/ResumenNotasCurso";
+import ProyeccionNotaCurso from "./components/ProyeccionNotaCurso";
 
 import NavegacionCurso, {
   type PestanaCurso,
@@ -1318,62 +1319,14 @@ function App() {
                 estadoMostrado={estadoMostrado}
               />
 
-              <section className="goal-calculator">
-                <div className="goal-heading">
-                  <div>
-                    <p>Proyección académica</p>
-                    <h3>Nota necesaria</h3>
-                  </div>
-
-                  <label className="goal-field">
-                    <span>Meta final</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="20"
-                      step="0.1"
-                      value={metaNota}
-                      onChange={(event) => actualizarMeta(event.target.value)}
-                    />
-                  </label>
-                </div>
-
-                <div className="goal-results">
-                  <article>
-                    <span>Puntos acumulados oficiales</span>
-                    <strong>{puntosAcumulados.toFixed(2)}</strong>
-                  </article>
-
-                  <article>
-                    <span>Porcentaje pendiente</span>
-                    <strong>{porcentajePendiente.toFixed(2)} %</strong>
-                  </article>
-                </div>
-
-                <div className="goal-message">
-                  {promedioNecesario === null ? (
-                    <strong>Ya no quedan evaluaciones pendientes.</strong>
-                  ) : promedioNecesario <= 0 ? (
-                    <strong>
-                      La meta ya está asegurada con las notas oficiales.
-                    </strong>
-                  ) : promedioNecesario > 20 ? (
-                    <strong>
-                      La meta no es alcanzable con las evaluaciones restantes.
-                    </strong>
-                  ) : (
-                    <>
-                      <span>Promedio aproximado necesario en lo pendiente</span>
-                      <strong>{promedioNecesario.toFixed(2)}</strong>
-                    </>
-                  )}
-                </div>
-
-                <small>
-                  Es una estimación. Los redondeos internos de EC1 y EC2 pueden
-                  modificar ligeramente el resultado final.
-                </small>
-              </section>
+              <ProyeccionNotaCurso
+                metaNota={metaNota}
+                notaMaxima={cursoSeleccionado.notaMaxima}
+                puntosAcumulados={puntosAcumulados}
+                porcentajePendiente={porcentajePendiente}
+                promedioNecesario={promedioNecesario}
+                onCambiarMeta={actualizarMeta}
+              />
 
               <section className="dynamic-evaluations-check">
                 <div className="dynamic-evaluations-heading">
