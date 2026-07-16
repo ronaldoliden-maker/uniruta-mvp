@@ -93,10 +93,6 @@ function PanelPrincipal({
         completadas={completadasGlobales}
       />
 
-      <AgendaSemanalGlobal
-        cursos={cursosRegistrados}
-        onAbrirPlan={abrirPlanCurso}
-      />
 
       <ListaCursos
         cursos={cursos}

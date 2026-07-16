@@ -16,6 +16,7 @@ import useNavegacion from "./hooks/useNavegacion";
 import ImportarSilaboCurso from "./components/ImportarSilaboCurso";
 import PlanEstudioCurso from "./components/PlanEstudioCurso";
 import AgendaSemanalGlobal from "./components/AgendaSemanalGlobal";
+import RespaldoDatos from "./components/RespaldoDatos";
 
 import type { PropuestaSilabo } from "./types/propuestaSilabo";
 
@@ -1233,6 +1234,7 @@ function App() {
             cursos={cursosRegistrados}
             onAbrirPlan={abrirPlanCurso}
           />
+        <RespaldoDatos />
         </>
       )}
 
