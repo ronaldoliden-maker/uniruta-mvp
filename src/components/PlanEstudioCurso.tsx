@@ -22,6 +22,7 @@ import {
 import {
   esSesionAtrasada,
   formatearFechaLarga,
+  obtenerDiaDeFecha,
   reprogramarSesionesAtrasadas,
 } from "../utils/fechasPlanEstudio";
 
@@ -70,6 +71,21 @@ function PlanEstudioCurso({
 
   const [mensaje, setMensaje] =
     useState("");
+
+  const [
+    sesionEditandoId,
+    setSesionEditandoId,
+  ] = useState<string | null>(null);
+
+  const [
+    fechaSesionEditada,
+    setFechaSesionEditada,
+  ] = useState("");
+
+  const [
+    duracionSesionEditada,
+    setDuracionSesionEditada,
+  ] = useState("60");
 
   useEffect(() => {
     guardarPlanEstudio(cursoId, {
@@ -225,6 +241,121 @@ function PlanEstudioCurso({
     setMensaje(
       `Se reprogramaron ${resultado.cantidadReprogramada} sesiones atrasadas.`,
     );
+  }
+
+  function abrirEdicionSesion(
+    sesion: SesionEstudio,
+  ) {
+    setSesionEditandoId(sesion.id);
+    setFechaSesionEditada(sesion.fecha);
+    setDuracionSesionEditada(
+      String(sesion.duracionMinutos),
+    );
+    setMensaje("");
+  }
+
+  function cancelarEdicionSesion() {
+    setSesionEditandoId(null);
+    setFechaSesionEditada("");
+    setDuracionSesionEditada("60");
+  }
+
+  function guardarEdicionSesion(
+    sesionId: string,
+  ) {
+    const duracion = Number(
+      duracionSesionEditada,
+    );
+
+    if (!fechaSesionEditada) {
+      setMensaje(
+        "Selecciona una fecha válida para la sesión.",
+      );
+      return;
+    }
+
+    if (
+      !Number.isInteger(duracion) ||
+      duracion < 15 ||
+      duracion > 240
+    ) {
+      setMensaje(
+        "La duración debe estar entre 15 y 240 minutos.",
+      );
+      return;
+    }
+
+    setSesiones((sesionesActuales) =>
+      sesionesActuales.map((sesion) => {
+        if (sesion.id !== sesionId) {
+          return sesion;
+        }
+
+        const cambioFecha =
+          sesion.fecha !==
+          fechaSesionEditada;
+
+        return {
+          ...sesion,
+          fecha: fechaSesionEditada,
+          dia: obtenerDiaDeFecha(
+            fechaSesionEditada,
+          ),
+          duracionMinutos: duracion,
+          reprogramada:
+            cambioFecha
+              ? true
+              : sesion.reprogramada,
+          fechaOriginal:
+            cambioFecha
+              ? sesion.fechaOriginal ??
+                sesion.fecha
+              : sesion.fechaOriginal,
+        };
+      }),
+    );
+
+    cancelarEdicionSesion();
+
+    setMensaje(
+      "La sesión se actualizó correctamente.",
+    );
+  }
+
+  function eliminarSesion(
+    sesionId: string,
+  ) {
+    const sesion = sesiones.find(
+      (sesionGuardada) =>
+        sesionGuardada.id === sesionId,
+    );
+
+    if (!sesion) {
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Deseas eliminar la sesión "${sesion.titulo}"?`,
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setSesiones((sesionesActuales) =>
+      sesionesActuales.filter(
+        (sesionGuardada) =>
+          sesionGuardada.id !== sesionId,
+      ),
+    );
+
+    if (
+      sesionEditandoId === sesionId
+    ) {
+      cancelarEdicionSesion();
+    }
+
+    setMensaje("Sesión eliminada.");
   }
 
   function alternarEstadoSesion(
@@ -582,9 +713,106 @@ function PlanEstudioCurso({
                         {sesion.estado}
                       </span>
                     </div>
+
+                    {sesionEditandoId ===
+                      sesion.id && (
+                      <section className="activity-form">
+                        <h3>
+                          Editar sesión
+                        </h3>
+
+                        <div className="form-grid">
+                          <label className="form-field">
+                            <span>
+                              Nueva fecha
+                            </span>
+
+                            <input
+                              type="date"
+                              value={
+                                fechaSesionEditada
+                              }
+                              onChange={(event) =>
+                                setFechaSesionEditada(
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          </label>
+
+                          <label className="form-field">
+                            <span>
+                              Duración en minutos
+                            </span>
+
+                            <input
+                              type="number"
+                              min="15"
+                              max="240"
+                              step="15"
+                              value={
+                                duracionSesionEditada
+                              }
+                              onChange={(event) =>
+                                setDuracionSesionEditada(
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          </label>
+                        </div>
+
+                        <div className="activity-actions">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              guardarEdicionSesion(
+                                sesion.id,
+                              )
+                            }
+                          >
+                            Guardar cambios
+                          </button>
+
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={
+                              cancelarEdicionSesion
+                            }
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </section>
+                    )}
                   </div>
 
                   <div className="activity-actions">
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        abrirEdicionSesion(
+                          sesion,
+                        )
+                      }
+                    >
+                      Mover o editar
+                    </button>
+
+                    <button
+                      type="button"
+                      className="delete-activity-button"
+                      onClick={() =>
+                        eliminarSesion(
+                          sesion.id,
+                        )
+                      }
+                    >
+                      Eliminar
+                    </button>
+
                     <button
                       type="button"
                       className="activity-status-button"
