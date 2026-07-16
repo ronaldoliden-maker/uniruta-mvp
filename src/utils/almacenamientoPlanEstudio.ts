@@ -112,4 +112,15 @@ export function guardarPlanEstudio(
     obtenerClave(cursoId),
     JSON.stringify(plan),
   );
+
+  window.dispatchEvent(
+    new CustomEvent(
+      "uniruta-plan-actualizado",
+      {
+        detail: {
+          cursoId,
+        },
+      },
+    ),
+  );
 }

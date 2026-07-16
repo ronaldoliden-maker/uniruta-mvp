@@ -18,6 +18,7 @@ import PlanEstudioCurso from "./components/PlanEstudioCurso";
 import AgendaSemanalGlobal from "./components/AgendaSemanalGlobal";
 import RespaldoDatos from "./components/RespaldoDatos";
 import ResumenHoyGlobal from "./components/ResumenHoyGlobal";
+import ProgresoEstudioGlobal from "./components/ProgresoEstudioGlobal";
 
 import type { PropuestaSilabo } from "./types/propuestaSilabo";
 
@@ -1232,6 +1233,11 @@ function App() {
           />
 
           <ResumenHoyGlobal
+            cursos={cursosRegistrados}
+            onAbrirPlan={abrirPlanCurso}
+          />
+
+          <ProgresoEstudioGlobal
             cursos={cursosRegistrados}
             onAbrirPlan={abrirPlanCurso}
           />
