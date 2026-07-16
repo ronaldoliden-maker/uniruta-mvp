@@ -17,6 +17,7 @@ import ImportarSilaboCurso from "./components/ImportarSilaboCurso";
 import PlanEstudioCurso from "./components/PlanEstudioCurso";
 import AgendaSemanalGlobal from "./components/AgendaSemanalGlobal";
 import RespaldoDatos from "./components/RespaldoDatos";
+import ResumenHoyGlobal from "./components/ResumenHoyGlobal";
 
 import type { PropuestaSilabo } from "./types/propuestaSilabo";
 
@@ -1228,6 +1229,11 @@ function App() {
             onEliminarCurso={eliminarCurso}
 
             onVolver={irAlInicio}
+          />
+
+          <ResumenHoyGlobal
+            cursos={cursosRegistrados}
+            onAbrirPlan={abrirPlanCurso}
           />
 
           <AgendaSemanalGlobal
