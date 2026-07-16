@@ -4,16 +4,25 @@ import type {
   SesionEstudio,
 } from "../types/planEstudio";
 
-const configuracionInicial: ConfiguracionPlanEstudio = {
-  semanaActual: 1,
-  horasSemanales: 6,
-  duracionSesion: 60,
-  diasDisponibles: [
-    "Lunes",
-    "Miércoles",
-    "Viernes",
-  ],
-};
+import {
+  obtenerDiaDeFecha,
+  obtenerFechaHoy,
+  obtenerProximaFechaParaDia,
+} from "./fechasPlanEstudio";
+
+function crearConfiguracionInicial(): ConfiguracionPlanEstudio {
+  return {
+    semanaActual: 1,
+    fechaInicio: obtenerFechaHoy(),
+    horasSemanales: 6,
+    duracionSesion: 60,
+    diasDisponibles: [
+      "Lunes",
+      "Miércoles",
+      "Viernes",
+    ],
+  };
+}
 
 function obtenerClave(cursoId: string) {
   return `uniruta-curso-${cursoId}-plan-estudio`;
@@ -22,26 +31,40 @@ function obtenerClave(cursoId: string) {
 function normalizarSesion(
   sesion: SesionEstudio,
 ): SesionEstudio {
+  const fecha =
+    sesion.fecha ||
+    obtenerProximaFechaParaDia(
+      sesion.dia,
+    );
+
   return {
     ...sesion,
+    fecha,
+    dia: obtenerDiaDeFecha(fecha),
     prioridad:
       sesion.prioridad ?? "Media",
     motivoPrioridad:
       sesion.motivoPrioridad ??
-      "Sesión generada con una versión anterior del planificador.",
+      "Sesión creada con una versión anterior del planificador.",
+    reprogramada:
+      sesion.reprogramada ?? false,
   };
 }
 
 export function cargarPlanEstudio(
   cursoId: string,
 ): PlanEstudioGuardado {
+  const configuracionInicial =
+    crearConfiguracionInicial();
+
   const guardado = localStorage.getItem(
     obtenerClave(cursoId),
   );
 
   if (!guardado) {
     return {
-      configuracion: configuracionInicial,
+      configuracion:
+        configuracionInicial,
       sesiones: [],
     };
   }
@@ -55,16 +78,27 @@ export function cargarPlanEstudio(
       configuracion: {
         ...configuracionInicial,
         ...(datos.configuracion ?? {}),
+        fechaInicio:
+          datos.configuracion
+            ?.fechaInicio ||
+          obtenerFechaHoy(),
       },
-      sesiones: Array.isArray(datos.sesiones)
-        ? datos.sesiones.map(normalizarSesion)
+      sesiones: Array.isArray(
+        datos.sesiones,
+      )
+        ? datos.sesiones.map(
+            normalizarSesion,
+          )
         : [],
     };
   } catch {
-    localStorage.removeItem(obtenerClave(cursoId));
+    localStorage.removeItem(
+      obtenerClave(cursoId),
+    );
 
     return {
-      configuracion: configuracionInicial,
+      configuracion:
+        configuracionInicial,
       sesiones: [],
     };
   }

@@ -18,6 +18,7 @@ export type PrioridadSesion =
 
 export type SesionEstudio = {
   id: string;
+  fecha: string;
   dia: DiaSemana;
   duracionMinutos: number;
   titulo: string;
@@ -26,10 +27,13 @@ export type SesionEstudio = {
   prioridad: PrioridadSesion;
   motivoPrioridad: string;
   estado: EstadoSesionEstudio;
+  reprogramada?: boolean;
+  fechaOriginal?: string;
 };
 
 export type ConfiguracionPlanEstudio = {
   semanaActual: number;
+  fechaInicio: string;
   horasSemanales: number;
   duracionSesion: number;
   diasDisponibles: DiaSemana[];

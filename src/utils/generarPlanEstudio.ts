@@ -14,6 +14,11 @@ import {
   obtenerPesosEvaluacionesDirectas,
 } from "./calcularNotas";
 
+import {
+  obtenerDiaDeFecha,
+  obtenerFechasParaSesiones,
+} from "./fechasPlanEstudio";
+
 type ElementoPlan = {
   titulo: string;
   detalle: string;
@@ -35,7 +40,9 @@ function normalizarTexto(texto: string) {
 function obtenerNumeroSemana(texto: string) {
   const coincidencia = texto.match(/\d+/);
 
-  return coincidencia ? Number(coincidencia[0]) : 999;
+  return coincidencia
+    ? Number(coincidencia[0])
+    : 999;
 }
 
 function calcularPrioridad(
@@ -62,21 +69,24 @@ function calcularUrgencia(
   if (diferencia < 0) {
     return {
       puntaje: 65,
-      motivo: "Está atrasada respecto de la semana actual.",
+      motivo:
+        "Está atrasada respecto de la semana actual.",
     };
   }
 
   if (diferencia === 0) {
     return {
       puntaje: 60,
-      motivo: "Corresponde a esta semana.",
+      motivo:
+        "Corresponde a esta semana.",
     };
   }
 
   if (diferencia === 1) {
     return {
       puntaje: 48,
-      motivo: "Está programada para la próxima semana.",
+      motivo:
+        "Está programada para la próxima semana.",
     };
   }
 
@@ -101,7 +111,9 @@ function buscarPesoActividad(
     obtenerEvaluacionesDirectas(componentes);
 
   const pesos =
-    obtenerPesosEvaluacionesDirectas(componentes);
+    obtenerPesosEvaluacionesDirectas(
+      componentes,
+    );
 
   const nombreNormalizado =
     normalizarTexto(nombreActividad);
@@ -109,10 +121,13 @@ function buscarPesoActividad(
   const coincidencia = evaluaciones.find(
     (evaluacion) => {
       const evaluacionNormalizada =
-        normalizarTexto(evaluacion.nombre);
+        normalizarTexto(
+          evaluacion.nombre,
+        );
 
       return (
-        evaluacionNormalizada === nombreNormalizado ||
+        evaluacionNormalizada ===
+          nombreNormalizado ||
         nombreNormalizado.includes(
           evaluacionNormalizada,
         ) ||
@@ -142,7 +157,9 @@ function crearElementosActividad(
     )
     .map((actividad) => {
       const semana =
-        obtenerNumeroSemana(actividad.semana);
+        obtenerNumeroSemana(
+          actividad.semana,
+        );
 
       const urgencia =
         calcularUrgencia(
@@ -168,7 +185,9 @@ function crearElementosActividad(
         Math.min(peso, 35) +
         bonoTipo;
 
-      const motivos = [urgencia.motivo];
+      const motivos = [
+        urgencia.motivo,
+      ];
 
       if (peso > 0) {
         motivos.push(
@@ -203,7 +222,8 @@ function crearElementosTemario(
 ): ElementoPlan[] {
   return temario
     .filter(
-      (tema) => tema.estado !== "Completado",
+      (tema) =>
+        tema.estado !== "Completado",
     )
     .map((tema) => {
       const urgencia =
@@ -237,25 +257,30 @@ function crearElementosTemario(
 function crearColaPriorizada(
   elementos: ElementoPlan[],
 ) {
-  const ordenados = [...elementos].sort(
+  const ordenados = [
+    ...elementos,
+  ].sort(
     (elementoA, elementoB) =>
       elementoB.puntaje -
       elementoA.puntaje,
   );
 
-  return ordenados.flatMap((elemento) => {
-    const repeticiones =
-      elemento.prioridad === "Alta"
-        ? 3
-        : elemento.prioridad === "Media"
-          ? 2
-          : 1;
+  return ordenados.flatMap(
+    (elemento) => {
+      const repeticiones =
+        elemento.prioridad === "Alta"
+          ? 3
+          : elemento.prioridad ===
+                "Media"
+            ? 2
+            : 1;
 
-    return Array.from(
-      { length: repeticiones },
-      () => elemento,
-    );
-  });
+      return Array.from(
+        { length: repeticiones },
+        () => elemento,
+      );
+    },
+  );
 }
 
 export function generarPlanEstudio(
@@ -275,7 +300,8 @@ export function generarPlanEstudio(
 
   if (
     cantidadSesiones <= 0 ||
-    configuracion.diasDisponibles.length === 0
+    configuracion.diasDisponibles.length ===
+      0
   ) {
     return [];
   }
@@ -299,34 +325,41 @@ export function generarPlanEstudio(
   const cola =
     crearColaPriorizada(elementos);
 
+  const maximoPorDia = Math.max(
+    1,
+    Math.ceil(
+      cantidadSesiones /
+        configuracion.diasDisponibles
+          .length,
+    ),
+  );
+
+  const fechas =
+    obtenerFechasParaSesiones(
+      configuracion.fechaInicio,
+      configuracion.diasDisponibles,
+      Math.min(cantidadSesiones, 14),
+      maximoPorDia,
+    );
+
   const sello = Date.now();
 
-  return Array.from(
-    {
-      length: Math.min(
-        cantidadSesiones,
-        14,
-      ),
-    },
-    (_, indice) => {
+  return fechas.map(
+    (fecha, indice) => {
       const elemento =
         cola[indice % cola.length];
 
-      const dia =
-        configuracion.diasDisponibles[
-          indice %
-            configuracion.diasDisponibles.length
-        ];
-
       return {
         id: `${cursoId}-sesion-${sello}-${indice}`,
-        dia,
+        fecha,
+        dia: obtenerDiaDeFecha(fecha),
         duracionMinutos:
           configuracion.duracionSesion,
         titulo: elemento.titulo,
         detalle: elemento.detalle,
         origen: elemento.origen,
-        prioridad: elemento.prioridad,
+        prioridad:
+          elemento.prioridad,
         motivoPrioridad:
           elemento.motivoPrioridad,
         estado: "Pendiente" as const,

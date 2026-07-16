@@ -1,4 +1,7 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import type {
   ComponenteNota,
@@ -15,6 +18,12 @@ import {
   cargarPlanEstudio,
   guardarPlanEstudio,
 } from "../utils/almacenamientoPlanEstudio";
+
+import {
+  esSesionAtrasada,
+  formatearFechaLarga,
+  reprogramarSesionesAtrasadas,
+} from "../utils/fechasPlanEstudio";
 
 import { generarPlanEstudio } from "../utils/generarPlanEstudio";
 
@@ -46,7 +55,10 @@ function PlanEstudioCurso({
   const planInicial =
     cargarPlanEstudio(cursoId);
 
-  const [configuracion, setConfiguracion] =
+  const [
+    configuracion,
+    setConfiguracion,
+  ] =
     useState<ConfiguracionPlanEstudio>(
       planInicial.configuracion,
     );
@@ -64,7 +76,11 @@ function PlanEstudioCurso({
       configuracion,
       sesiones,
     });
-  }, [cursoId, configuracion, sesiones]);
+  }, [
+    cursoId,
+    configuracion,
+    sesiones,
+  ]);
 
   function cambiarSemanaActual(
     valor: string,
@@ -81,6 +97,19 @@ function PlanEstudioCurso({
         semanaActual: numero,
       }));
     }
+  }
+
+  function cambiarFechaInicio(
+    valor: string,
+  ) {
+    if (!valor) {
+      return;
+    }
+
+    setConfiguracion((actual) => ({
+      ...actual,
+      fechaInicio: valor,
+    }));
   }
 
   function cambiarHoras(valor: string) {
@@ -104,7 +133,9 @@ function PlanEstudioCurso({
     const numero = Number(valor);
 
     if (
-      [30, 45, 60, 90].includes(numero)
+      [30, 45, 60, 90].includes(
+        numero,
+      )
     ) {
       setConfiguracion((actual) => ({
         ...actual,
@@ -113,22 +144,27 @@ function PlanEstudioCurso({
     }
   }
 
-  function alternarDia(dia: DiaSemana) {
+  function alternarDia(
+    dia: DiaSemana,
+  ) {
     setConfiguracion((actual) => {
       const yaSeleccionado =
-        actual.diasDisponibles.includes(dia);
+        actual.diasDisponibles.includes(
+          dia,
+        );
 
       return {
         ...actual,
-        diasDisponibles: yaSeleccionado
-          ? actual.diasDisponibles.filter(
-              (diaGuardado) =>
-                diaGuardado !== dia,
-            )
-          : [
-              ...actual.diasDisponibles,
-              dia,
-            ],
+        diasDisponibles:
+          yaSeleccionado
+            ? actual.diasDisponibles.filter(
+                (diaGuardado) =>
+                  diaGuardado !== dia,
+              )
+            : [
+                ...actual.diasDisponibles,
+                dia,
+              ],
       };
     });
   }
@@ -161,8 +197,33 @@ function PlanEstudioCurso({
     }
 
     setSesiones(planGenerado);
+
     setMensaje(
-      `Se generaron ${planGenerado.length} sesiones priorizadas para ${nombreCurso}.`,
+      `Se generaron ${planGenerado.length} sesiones con fechas reales para ${nombreCurso}.`,
+    );
+  }
+
+  function reprogramarAtrasadas() {
+    const resultado =
+      reprogramarSesionesAtrasadas(
+        sesiones,
+        configuracion.diasDisponibles,
+      );
+
+    if (
+      resultado.cantidadReprogramada ===
+      0
+    ) {
+      setMensaje(
+        "No existen sesiones atrasadas para reprogramar.",
+      );
+      return;
+    }
+
+    setSesiones(resultado.sesiones);
+
+    setMensaje(
+      `Se reprogramaron ${resultado.cantidadReprogramada} sesiones atrasadas.`,
     );
   }
 
@@ -201,43 +262,76 @@ function PlanEstudioCurso({
   const sesionesCompletadas =
     sesiones.filter(
       (sesion) =>
-        sesion.estado === "Completada",
+        sesion.estado ===
+        "Completada",
     ).length;
 
   const sesionesAltaPrioridad =
     sesiones.filter(
       (sesion) =>
+        sesion.estado === "Pendiente" &&
         sesion.prioridad === "Alta",
     ).length;
+
+  const sesionesAtrasadas =
+    sesiones.filter(
+      esSesionAtrasada,
+    ).length;
+
+  const sesionesOrdenadas = [
+    ...sesiones,
+  ].sort((sesionA, sesionB) =>
+    sesionA.fecha.localeCompare(
+      sesionB.fecha,
+    ),
+  );
 
   return (
     <section className="activities-panel">
       <div className="activities-header">
         <div>
-          <p>Organización inteligente</p>
+          <p>
+            Organización inteligente
+          </p>
           <h2>Plan de estudio</h2>
         </div>
 
-        <button
-          type="button"
-          onClick={generarPlan}
-        >
-          Generar plan inteligente
-        </button>
+        <div className="activity-actions">
+          {sesionesAtrasadas > 0 && (
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={
+                reprogramarAtrasadas
+              }
+            >
+              Reprogramar atrasadas
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={generarPlan}
+          >
+            Generar plan inteligente
+          </button>
+        </div>
       </div>
 
       <article className="next-activity">
         <p>Curso seleccionado</p>
         <h2>{nombreCurso}</h2>
         <span>
-          UniRuta prioriza cercanía de la
-          evaluación, peso en la nota final y
-          temas atrasados.
+          Las sesiones reciben una fecha
+          real y las pendientes vencidas
+          pueden moverse automáticamente.
         </span>
       </article>
 
       <section className="activity-form">
-        <h3>Configuración semanal</h3>
+        <h3>
+          Configuración semanal
+        </h3>
 
         <div className="form-grid">
           <label className="form-field">
@@ -253,6 +347,24 @@ function PlanEstudioCurso({
               }
               onChange={(event) =>
                 cambiarSemanaActual(
+                  event.target.value,
+                )
+              }
+            />
+          </label>
+
+          <label className="form-field">
+            <span>
+              Comenzar el plan desde
+            </span>
+
+            <input
+              type="date"
+              value={
+                configuracion.fechaInicio
+              }
+              onChange={(event) =>
+                cambiarFechaInicio(
                   event.target.value,
                 )
               }
@@ -343,99 +455,154 @@ function PlanEstudioCurso({
         <article className="next-activity">
           <p>Plan semanal</p>
           <h2>
-            Todavía no hay sesiones generadas
+            Todavía no hay sesiones
+            generadas
           </h2>
           <span>
-            Indica la semana actual, configura
-            tu disponibilidad y genera el plan.
+            Configura la fecha, tus días y
+            tus horas disponibles.
           </span>
         </article>
       ) : (
         <>
-          <article className="next-activity">
-            <p>Avance del plan</p>
-            <h2>
-              {sesionesCompletadas} de{" "}
-              {sesiones.length} sesiones
-              completadas
-            </h2>
-            <span>
-              {sesionesAltaPrioridad} sesiones
-              tienen prioridad alta.
-            </span>
-          </article>
+          <div className="course-summary-grid">
+            <article className="summary-card">
+              <strong>
+                {sesionesCompletadas}
+              </strong>
+              <span>
+                Sesiones completadas
+              </span>
+            </article>
+
+            <article className="summary-card">
+              <strong>
+                {sesionesAltaPrioridad}
+              </strong>
+              <span>Prioridad alta</span>
+            </article>
+
+            <article className="summary-card">
+              <strong>
+                {sesionesAtrasadas}
+              </strong>
+              <span>Sesiones atrasadas</span>
+            </article>
+
+            <article className="summary-card">
+              <strong>
+                {sesiones.length}
+              </strong>
+              <span>Total planificado</span>
+            </article>
+          </div>
 
           <div className="activities-list">
-            {sesiones.map((sesion) => (
-              <article
-                className="activity-card"
-                key={sesion.id}
-              >
-                <div>
-                  <h3>
-                    {sesion.titulo}
-                  </h3>
+            {sesionesOrdenadas.map(
+              (sesion) => (
+                <article
+                  className="activity-card"
+                  key={sesion.id}
+                >
+                  <div>
+                    <p>
+                      {formatearFechaLarga(
+                        sesion.fecha,
+                      )}
+                    </p>
 
-                  <p>{sesion.detalle}</p>
+                    <h3>
+                      {sesion.titulo}
+                    </h3>
 
-                  <p>
-                    <strong>
-                      Prioridad{" "}
-                      {sesion.prioridad}:
-                    </strong>{" "}
-                    {sesion.motivoPrioridad}
-                  </p>
+                    <p>
+                      {sesion.detalle}
+                    </p>
 
-                  <div className="activity-meta">
-                    <span>{sesion.dia}</span>
-
-                    <span>
+                    <p>
+                      <strong>
+                        Prioridad{" "}
+                        {sesion.prioridad}:
+                      </strong>{" "}
                       {
-                        sesion.duracionMinutos
-                      }{" "}
-                      minutos
-                    </span>
+                        sesion.motivoPrioridad
+                      }
+                    </p>
 
-                    <span>
-                      {sesion.origen}
-                    </span>
+                    {sesion.reprogramada && (
+                      <p>
+                        <strong>
+                          Reprogramada
+                        </strong>
+                        {sesion.fechaOriginal
+                          ? ` desde ${formatearFechaLarga(
+                              sesion.fechaOriginal,
+                            )}`
+                          : ""}
+                      </p>
+                    )}
 
-                    <span>
-                      Prioridad{" "}
-                      {sesion.prioridad}
-                    </span>
+                    <div className="activity-meta">
+                      <span>
+                        {sesion.dia}
+                      </span>
 
-                    <span
-                      className={`status-badge ${
-                        sesion.estado ===
-                        "Completada"
-                          ? "completed-status"
-                          : ""
-                      }`}
-                    >
-                      {sesion.estado}
-                    </span>
+                      <span>
+                        {
+                          sesion.duracionMinutos
+                        }{" "}
+                        minutos
+                      </span>
+
+                      <span>
+                        {sesion.origen}
+                      </span>
+
+                      <span>
+                        Prioridad{" "}
+                        {sesion.prioridad}
+                      </span>
+
+                      {esSesionAtrasada(
+                        sesion,
+                      ) && (
+                        <span>
+                          Atrasada
+                        </span>
+                      )}
+
+                      <span
+                        className={`status-badge ${
+                          sesion.estado ===
+                          "Completada"
+                            ? "completed-status"
+                            : ""
+                        }`}
+                      >
+                        {sesion.estado}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="activity-actions">
-                  <button
-                    type="button"
-                    className="activity-status-button"
-                    onClick={() =>
-                      alternarEstadoSesion(
-                        sesion.id,
-                      )
-                    }
-                  >
-                    {sesion.estado ===
-                    "Completada"
-                      ? "Reabrir"
-                      : "Completar"}
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="activity-actions">
+                    <button
+                      type="button"
+                      className="activity-status-button"
+                      onClick={() =>
+                        alternarEstadoSesion(
+                          sesion.id,
+                        )
+                      }
+                    >
+                      {sesion.estado ===
+                      "Completada"
+                        ? "Reabrir"
+                        : "Completar"}
+                    </button>
+                  </div>
+                </article>
+              ),
+            )}
           </div>
 
           <button
