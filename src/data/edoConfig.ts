@@ -1,25 +1,9 @@
-export type TipoCalculo =
-  | 'nota_directa'
-  | 'promedio'
-  | 'suma'
-  | 'ponderado'
+import type {
+  ConfiguracionCurso,
+} from '../types/academico'
 
-export type ReglaRedondeo =
-  | 'ninguno'
-  | 'entero'
-
-export type ComponenteNota = {
-  id: string
-  nombre: string
-  tipo: TipoCalculo
-  peso?: number
-  notaMaxima?: number
-  redondeo?: ReglaRedondeo
-  hijos?: ComponenteNota[]
-}
-
-export const configuracionEDO = {
-  id: 'edo-2026-1',
+export const configuracionEDO: ConfiguracionCurso = {
+id: 'edo-2026-1',
   nombre: 'Ecuaciones Diferenciales',
   ciclo: '2026-1',
   notaMinima: 10.5,
@@ -246,5 +230,5 @@ export const configuracionEDO = {
       notaMaxima: 20,
       redondeo: 'ninguno',
     },
-  ] satisfies ComponenteNota[],
+  ],
 }

@@ -1242,3 +1242,23 @@
   border-radius: 9px;
   cursor: pointer;
 }
+
+
+.courses-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.courses-section-heading h2 {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .courses-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
